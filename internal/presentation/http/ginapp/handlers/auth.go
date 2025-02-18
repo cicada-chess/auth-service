@@ -4,12 +4,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/user/interfaces"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/response"
 )
 
 type AuthHandler struct {
 	Service interfaces.AuthService
+	Logger  *logrus.Logger
 }
 
 func (h *AuthHandler) Ping(c *gin.Context) {

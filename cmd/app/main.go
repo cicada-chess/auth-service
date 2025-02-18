@@ -14,9 +14,12 @@ import (
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/db/postgres"
 	infrastructure "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/repository/postgres/auth"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/http/ginapp"
+	"gitlab.mai.ru/cicada-chess/backend/auth-service/logger"
 )
 
 func main() {
+	logger := logger.New()
+
 	cfgToDB := postgres.GetDBConfig()
 	dbConn, err := postgres.NewPostgresDB(cfgToDB)
 	if err != nil {
@@ -29,7 +32,7 @@ func main() {
 	userService := service.NewAuthService(userRepo)
 
 	r := gin.Default()
-	ginapp.InitRoutes(r, userService)
+	ginapp.InitRoutes(r, userService, logger)
 
 	server := &http.Server{
 		Addr:    ":8080",
