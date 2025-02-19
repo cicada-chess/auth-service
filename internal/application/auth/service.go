@@ -16,15 +16,18 @@ var (
 	ErrInvalidCredentials    = errors.New("invalid credentials")
 	ErrUserBlocked           = errors.New("user is blocked")
 	ErrTokenInvalidOrExpired = errors.New("token is invalid or expired")
+	ErrUserNotFound          = errors.New("user not found")
 )
 
 type authService struct {
-	repo interfaces.AuthRepository
+	repo        interfaces.AuthRepository
+	emailSender interfaces.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 }
 
-func NewAuthService(repo interfaces.AuthRepository) interfaces.AuthService {
+func NewAuthService(repo interfaces.AuthRepository, emailSender interfaces.EmailSender) interfaces.AuthService {
 	return &authService{
-		repo: repo,
+		repo:        repo,
+		emailSender: emailSender, // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 	}
 }
 
@@ -33,7 +36,7 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 	token := &auth.Token{}
 
 	user, err := s.repo.GetUserByEmail(ctx, email)
-	if err != nil {
+	if err != nil || user == nil {
 		return nil, ErrInvalidCredentials
 	}
 
@@ -116,4 +119,46 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func (s *authService) ForgotPassword(ctx context.Context, email string) error {
+	user, err := s.repo.GetUserByEmail(ctx, email)
+	if err != nil || user == nil {
+		return ErrUserNotFound
+	}
+
+	resetToken, err := auth.GenerateResetToken(user.ID, user.Role)
+	if err != nil {
+		return err
+	}
+
+	if err := s.emailSender.SendResetPasswordEmail(email, resetToken); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *authService) ResetPassword(ctx context.Context, resetToken string, newPassword string) error {
+	token, err := jwt.Parse(resetToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, ErrTokenInvalidOrExpired
+		}
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+
+	if err != nil || !token.Valid {
+		return ErrTokenInvalidOrExpired
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return ErrTokenInvalidOrExpired
+	}
+
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return ErrTokenInvalidOrExpired
+	}
+
+	return s.repo.UpdateUserPassword(ctx, userID, newPassword)
 }

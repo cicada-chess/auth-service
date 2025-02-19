@@ -19,3 +19,7 @@ func NewAuthRepository(db *sqlx.DB) *authRepository {
 func (r *authRepository) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	return nil, nil
 }
+
+func (r *authRepository) UpdateUserPassword(ctx context.Context, userID string, newPassword string) error {
+	return nil
+}

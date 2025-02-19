@@ -7,7 +7,12 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 )
 
-require github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+require (
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/golang/mock v1.6.0 // indirect
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+)
 
 require (
 	github.com/bytedance/sonic v1.12.8 // indirect

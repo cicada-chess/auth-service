@@ -10,6 +10,7 @@ import (
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/response"
+	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/http/ginapp/dto"
 )
 
 type AuthHandler struct {
@@ -17,17 +18,8 @@ type AuthHandler struct {
 	Logger  *logrus.Logger
 }
 
-type LoginRequest struct {
-	Email    string
-	Password string
-}
-
-type RefreshRequest struct {
-	RefreshToken string
-}
-
 func (h *AuthHandler) Login(c *gin.Context) {
-	var request LoginRequest
+	var request dto.LoginRequest
 
 	if err := c.BindJSON(&request); err != nil {
 		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -39,16 +31,12 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			response.NewErrorResponse(c, http.StatusBadRequest, "Неверные учетные данные")
-			return
-		}
-
-		if errors.Is(err, auth.ErrUserBlocked) {
+		} else if errors.Is(err, auth.ErrUserBlocked) {
 			response.NewErrorResponse(c, http.StatusForbidden, "Пользователь заблокирован")
-			return
 		} else {
 			response.NewErrorResponse(c, http.StatusInternalServerError, "Внутренняя ошибка сервера")
-			return
 		}
+		return
 
 	}
 
@@ -78,7 +66,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	var request RefreshRequest
+	var request dto.RefreshRequest
 
 	if err := c.BindJSON(&request); err != nil {
 		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -90,11 +78,10 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, auth.ErrTokenInvalidOrExpired) {
 			response.NewErrorResponse(c, http.StatusUnauthorized, "Недействительный или истекший refresh token")
-			return
 		} else {
 			response.NewErrorResponse(c, http.StatusInternalServerError, "Внутренняя ошибка сервера")
-			return
 		}
+		return
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Новый токен успешно получен", gin.H{
@@ -131,10 +118,42 @@ func (h *AuthHandler) Check(c *gin.Context) {
 }
 
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	var request dto.ForgotPasswordRequest
+	if err := c.BindJSON(&request); err != nil {
+		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err := h.Service.ForgotPassword(c, request.Email)
+	if err != nil {
+		if errors.Is(err, auth.ErrUserNotFound) {
+			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь с указанным email не найден")
+		} else {
+			response.NewErrorResponse(c, http.StatusInternalServerError, "Внутренняя ошибка сервера")
+		}
+		return
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Ссылка для восстановления отправлена", nil)
 
 }
 
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var request dto.ResetPasswordRequest
+	if err := c.BindJSON(&request); err != nil {
+		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err := h.Service.ResetPassword(c, request.Token, request.NewPassword)
+
+	if err != nil {
+		response.NewErrorResponse(c, http.StatusBadRequest, "Неверный или истекший токен")
+		return
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Пароль успешно изменен", nil)
+
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {
