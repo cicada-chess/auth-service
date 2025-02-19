@@ -155,7 +155,3 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	response.NewSuccessResponse(c, http.StatusOK, "Пароль успешно изменен", nil)
 
 }
-
-func (h *AuthHandler) Me(c *gin.Context) {
-
-}
