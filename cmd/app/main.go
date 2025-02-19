@@ -29,7 +29,7 @@ func main() {
 
 	userRepo := infrastructure.NewAuthRepository(dbConn)
 
-	userService := service.NewAuthService(userRepo)
+	userService := service.NewAuthService(userRepo, nil /*emailSender*/)
 
 	r := gin.Default()
 	ginapp.InitRoutes(r, userService, logger)
