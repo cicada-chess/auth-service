@@ -14,7 +14,3 @@ type AuthService interface {
 	ResetPassword(ctx context.Context, resetToken string, newPassword string) error
 	Access(ctx context.Context, role int, url string) error
 }
-
-type EmailSender interface {
-	SendResetPasswordEmail(email, token string) error
-}

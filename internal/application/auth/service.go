@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	senderInterface "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/sender"
 	accessEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/entity"
 	accessInterfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/interfaces"
 	auth "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
@@ -22,15 +23,16 @@ var (
 	ErrUserNotFound          = errors.New("user not found")
 	ErrUrlNotFound           = errors.New("url not found")
 	ErrPermissionDenied      = errors.New("permission denied")
+	ErrInternalServer        = errors.New("internal server error")
 )
 
 type authService struct {
 	authRepo    authInterfaces.AuthRepository
 	accessRepo  accessInterfaces.AccessRepository
-	emailSender authInterfaces.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
+	emailSender senderInterface.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 }
 
-func NewAuthService(authRepo authInterfaces.AuthRepository, emailSender authInterfaces.EmailSender, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
+func NewAuthService(authRepo authInterfaces.AuthRepository, emailSender senderInterface.EmailSender, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
 	return &authService{
 		authRepo:    authRepo,
 		accessRepo:  accessRepo,
@@ -43,7 +45,11 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 	token := &auth.Token{}
 
 	user, err := s.authRepo.GetUserByEmail(ctx, email)
-	if err != nil || user == nil {
+	if err != nil {
+		return nil, ErrInternalServer
+	}
+
+	if user == nil && errors.Is(err, nil) {
 		return nil, ErrInvalidCredentials
 	}
 
@@ -51,7 +57,7 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 		return nil, ErrUserBlocked
 	}
 
-	if !userEntity.ComparePasswords(user.Password, password) {
+	if !userEntity.ComparePasswords(password, user.Password) {
 		return nil, ErrInvalidCredentials
 	}
 
@@ -96,8 +102,8 @@ func (s *authService) Check(ctx context.Context, tokenHeader string) error {
 		return ErrTokenInvalidOrExpired
 	}
 
-	expires_at, ok := claims["expires_at"].(int64)
-	if !ok || expires_at < int64(time.Now().Unix()) {
+	expires_at, ok := claims["expires_at"].(float64)
+	if !ok || expires_at < float64(time.Now().Unix()) {
 		return ErrTokenInvalidOrExpired
 	}
 
@@ -121,8 +127,8 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 		return nil, ErrTokenInvalidOrExpired
 	}
 
-	expires_at, ok := claims["expires_at"].(int64)
-	if !ok || expires_at < int64(time.Now().Unix()) {
+	expires_at, ok := claims["expires_at"].(float64)
+	if !ok || expires_at < float64(time.Now().Unix()) {
 		return nil, ErrTokenInvalidOrExpired
 	}
 

@@ -56,7 +56,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	err := h.Service.Check(c.Request.Context(), tokenHeader)
 	if err != nil {
-		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истек")
+		response.NewErrorResponse(c, http.StatusUnauthorized, "Неавторизованный доступ")
 		return
 	}
 
