@@ -5,3 +5,12 @@ type ProtectedUrl struct {
 	Url   string
 	Roles []int
 }
+
+func CheckPermission(roles []int, role int) bool {
+	for _, r := range roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}

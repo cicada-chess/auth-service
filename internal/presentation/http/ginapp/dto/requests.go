@@ -17,3 +17,8 @@ type ResetPasswordRequest struct {
 	Token       string `json:"token"`
 	NewPassword string `json:"new_password"`
 }
+
+type AccessRequest struct {
+	Role int    `json:"role"`
+	Url  string `json:"url"`
+}

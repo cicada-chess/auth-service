@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -26,7 +25,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.Service.Login(c, request.Email, request.Password)
+	token, err := h.Service.Login(c.Request.Context(), request.Email, request.Password)
 
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
@@ -49,15 +48,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	accessToken := c.GetHeader("Authorization")
-	if accessToken == "" {
+	tokenHeader := c.GetHeader("Authorization")
+	if tokenHeader == "" {
 		response.NewErrorResponse(c, http.StatusUnauthorized, "Неавторизованный доступ")
 		return
 	}
 
-	err := h.Service.Check(c, accessToken)
+	err := h.Service.Check(c.Request.Context(), tokenHeader)
 	if err != nil {
-		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истек")
+		response.NewErrorResponse(c, http.StatusUnauthorized, "Неавторизованный доступ")
 		return
 	}
 
@@ -73,7 +72,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	token, err := h.Service.Refresh(c, request.RefreshToken)
+	token, err := h.Service.Refresh(c.Request.Context(), request.RefreshToken)
 
 	if err != nil {
 		if errors.Is(err, auth.ErrTokenInvalidOrExpired) {
@@ -96,19 +95,9 @@ func (h *AuthHandler) Check(c *gin.Context) {
 		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен отсутствует")
 		return
 	}
-	const bearerPrefix = "Bearer "
-	if !strings.HasPrefix(tokenHeader, bearerPrefix) {
-		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истек")
-		return
-	}
 
-	accessToken := strings.TrimPrefix(tokenHeader, bearerPrefix)
-	if accessToken == "" {
-		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истек")
-		return
-	}
+	err := h.Service.Check(c.Request.Context(), tokenHeader)
 
-	err := h.Service.Check(c, accessToken)
 	if err != nil {
 		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истек")
 		return
@@ -124,7 +113,7 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		return
 	}
 
-	err := h.Service.ForgotPassword(c, request.Email)
+	err := h.Service.ForgotPassword(c.Request.Context(), request.Email)
 	if err != nil {
 		if errors.Is(err, auth.ErrUserNotFound) {
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь с указанным email не найден")
@@ -145,13 +134,41 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	err := h.Service.ResetPassword(c, request.Token, request.NewPassword)
+	err := h.Service.ResetPassword(c.Request.Context(), request.Token, request.NewPassword)
 
 	if err != nil {
-		response.NewErrorResponse(c, http.StatusBadRequest, "Неверный или истекший токен")
+		response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
 		return
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Пароль успешно изменен", nil)
 
+}
+
+func (h *AuthHandler) Access(c *gin.Context) {
+	tokenHeader := c.GetHeader("Authorization")
+	if tokenHeader == "" {
+		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
+		return
+	}
+
+	if err := h.Service.Check(c.Request.Context(), tokenHeader); err != nil {
+		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
+		return
+	}
+
+	var request dto.AccessRequest
+	if err := c.BindJSON(&request); err != nil {
+		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err := h.Service.Access(c.Request.Context(), request.Role, request.Url)
+
+	if err != nil {
+		response.NewErrorResponse(c, http.StatusBadRequest, "Доступ запрещён")
+		return
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Доступ разрешён", nil)
 }

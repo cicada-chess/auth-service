@@ -18,5 +18,7 @@ func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Lo
 		api.GET("/check", handler.Check)
 		api.POST("/forgot-password", handler.ForgotPassword)
 		api.POST("/reset-password", handler.ResetPassword)
+		api.POST("/access", handler.Access)
+
 	}
 }
