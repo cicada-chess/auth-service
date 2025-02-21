@@ -16,5 +16,13 @@ func NewAuthRepository(db *sqlx.DB) *accessRepository {
 }
 
 func (r *accessRepository) GetProtectedUrl(ctx context.Context, url string) (*entity.ProtectedUrl, error) {
-	return nil, nil
+	var protectedUrl entity.ProtectedUrl
+
+	query := `SELECT id, url, roles FROM protected_urls WHERE url = $1`
+
+	if err := r.db.GetContext(ctx, &protectedUrl, query, url); err != nil {
+		return nil, err
+	}
+
+	return &protectedUrl, nil
 }
