@@ -1,0 +1,394 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/auth/access": {
+            "post": {
+                "description": "Проверяет доступ к заданному маршруту на основе роли",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Проверка прав доступа",
+                "parameters": [
+                    {
+                        "description": "Роль и маршрут",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.AccessRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Доступ разрешён",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Недействительные данные",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Недействительный или отсутствующий токен",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/check": {
+            "get": {
+                "description": "Проверяет валидность переданного access-токена",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Проверка токена",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Токен действителен",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Токен недействителен или отсутствует",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "description": "Отправляет ссылку для восстановления доступа",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Восстановление пароля",
+                "parameters": [
+                    {
+                        "description": "Email для восстановления",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ForgotPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ссылка для восстановления отправлена",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Аутентифицирует пользователя и выдаёт JWT-токены",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Вход пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для входа",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешная авторизация",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные учётные данные",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Пользователь заблокирован",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "description": "Завершает сессию пользователя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Выход пользователя",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Сессия завершена",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "Обновляет access-токен с помощью refresh-токена",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Обновление токена",
+                "parameters": [
+                    {
+                        "description": "Refresh-токен",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.RefreshRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Новый токен получен",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Недействительный или истекший refresh-токен",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "description": "Сбрасывает пароль по ссылке для восстановления",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Сброс пароля",
+                "parameters": [
+                    {
+                        "description": "Новый пароль",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ResetPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Пароль изменён",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Токен недействителен или истек",
+                        "schema": {
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.AccessRequest": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ForgotPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.RefreshRequest": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ResetPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

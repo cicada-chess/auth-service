@@ -1,15 +1,14 @@
 ifneq (,$(wildcard .env))
-    include .env
-    export
+include .env
+export
 endif
 
-MIGRATE=migrate -path ./migrations -database "postgres://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(SSL_MODE)"
 sourceToMock=internal/domain/user/interfaces/repository.go
 destinationToMock=internal/domain/user/mocks/mock_repository.go
 
 RUN_DIR = ./cmd/app
 
-.PHONY: run 
+.PHONY: run
 run:
 	go run $(RUN_DIR)/main.go
 
@@ -17,17 +16,9 @@ run:
 install:
 	go mod download
 
-.PHONY : clear
+.PHONY: clear
 clear:
 	go mod tidy
-
-.PHONY: migrate-up
-migrate-up:
-	$(MIGRATE) up
-
-.PHONY: migrate-down
-migrate-down:
-	$(MIGRATE) down
 
 .PHONY: cover
 cover:
@@ -52,3 +43,6 @@ test100:
 race:
 	go test -v -race -count=1 ./...
 
+.PHONY: swag
+swag:
+	swag init -g cmd/app/main.go --output docs --parseDependency --parseInternal
