@@ -14,6 +14,7 @@ import (
 	auth "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
 	authInterfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	userEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/user/entity"
+	pb "gitlab.mai.ru/cicada-chess/backend/auth-service/proto"
 )
 
 var (
@@ -27,14 +28,14 @@ var (
 )
 
 type authService struct {
-	authRepo    authInterfaces.AuthRepository
+	client      pb.UserServiceClient
 	accessRepo  accessInterfaces.AccessRepository
 	emailSender senderInterface.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 }
 
-func NewAuthService(authRepo authInterfaces.AuthRepository, emailSender senderInterface.EmailSender, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
+func NewAuthService(client pb.UserServiceClient, emailSender senderInterface.EmailSender, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
 	return &authService{
-		authRepo:    authRepo,
+		client:      client,
 		accessRepo:  accessRepo,
 		emailSender: emailSender, // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 	}
@@ -44,9 +45,10 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 
 	token := &auth.Token{}
 
-	user, err := s.authRepo.GetUserByEmail(ctx, email)
+	req := &pb.GetUserByEmailRequest{Email: email}
+	user, err := s.client.GetUserByEmail(ctx, req)
 	if err != nil {
-		return nil, ErrInternalServer
+		return nil, err
 	}
 
 	if user == nil && errors.Is(err, nil) {
@@ -61,13 +63,13 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 		return nil, ErrInvalidCredentials
 	}
 
-	token.RefreshToken, err = auth.GenerateRefreshToken(user.ID, user.Role)
+	token.RefreshToken, err = auth.GenerateRefreshToken(user.Id, int(user.Role))
 
 	if err != nil {
 		return nil, err
 	}
 
-	token.AccessToken, err = auth.GenerateAccessToken(user.ID, user.Role)
+	token.AccessToken, err = auth.GenerateAccessToken(user.Id, int(user.Role))
 	if err != nil {
 		return nil, err
 	}
@@ -145,12 +147,13 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 }
 
 func (s *authService) ForgotPassword(ctx context.Context, email string) error {
-	user, err := s.authRepo.GetUserByEmail(ctx, email)
+	req := &pb.GetUserByEmailRequest{Email: email}
+	user, err := s.client.GetUserByEmail(ctx, req)
 	if err != nil || user == nil {
 		return ErrUserNotFound
 	}
 
-	resetToken, err := auth.GenerateResetToken(user.ID, user.Role)
+	resetToken, err := auth.GenerateResetToken(user.Id, int(user.Role))
 	if err != nil {
 		return err
 	}
@@ -183,7 +186,12 @@ func (s *authService) ResetPassword(ctx context.Context, resetToken string, newP
 		return ErrTokenInvalidOrExpired
 	}
 
-	return s.authRepo.UpdateUserPassword(ctx, userID, newPassword)
+	req := &pb.UpdateUserPasswordRequest{Id: userID, Password: newPassword}
+	status, err := s.client.UpdateUserPassword(ctx, req)
+	if err != nil && status == nil {
+		return ErrInternalServer
+	}
+	return nil
 }
 
 func (s *authService) Access(ctx context.Context, role int, url string) error {

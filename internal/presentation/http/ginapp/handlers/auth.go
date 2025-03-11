@@ -10,6 +10,7 @@ import (
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/response"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/http/ginapp/dto"
+	"google.golang.org/grpc"
 )
 
 // @title Auth API
@@ -22,6 +23,7 @@ import (
 type AuthHandler struct {
 	Service interfaces.AuthService
 	Logger  *logrus.Logger
+	Client  *grpc.ClientConn
 }
 
 // Login godoc
@@ -52,7 +54,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		} else if errors.Is(err, auth.ErrUserBlocked) {
 			response.NewErrorResponse(c, http.StatusForbidden, "Пользователь заблокирован")
 		} else {
-			response.NewErrorResponse(c, http.StatusInternalServerError, "Внутренняя ошибка сервера")
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		}
 		return
 
