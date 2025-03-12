@@ -14,7 +14,7 @@ import (
 	auth "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
 	authInterfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	userEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/user/entity"
-	pb "gitlab.mai.ru/cicada-chess/backend/auth-service/proto"
+	pb "gitlab.mai.ru/cicada-chess/backend/user-service/pkg/user"
 )
 
 var (
@@ -33,7 +33,7 @@ type authService struct {
 	emailSender senderInterface.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 }
 
-func NewAuthService(client pb.UserServiceClient, emailSender senderInterface.EmailSender, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
+func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.AccessRepository, emailSender senderInterface.EmailSender) authInterfaces.AuthService {
 	return &authService{
 		client:      client,
 		accessRepo:  accessRepo,
@@ -197,7 +197,7 @@ func (s *authService) ResetPassword(ctx context.Context, resetToken string, newP
 func (s *authService) Access(ctx context.Context, role int, url string) error {
 	protectedUrl, err := s.accessRepo.GetProtectedUrl(ctx, url)
 	if err != nil {
-		return ErrUrlNotFound
+		return err
 	}
 	if !accessEntity.CheckPermission(protectedUrl.Roles, role) {
 		return ErrPermissionDenied

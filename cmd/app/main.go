@@ -12,16 +12,18 @@ import (
 	"github.com/gin-gonic/gin"
 	service "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/db/postgres"
-	grpcclient "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/messaging/grpc"
+	infrastructure "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/repository/postgres/access"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/http/ginapp"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/logger"
-	pb "gitlab.mai.ru/cicada-chess/backend/auth-service/proto"
+	pb "gitlab.mai.ru/cicada-chess/backend/user-service/pkg/user"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
 	logger := logger.New()
 
-	conn, err := grpcclient.NewClient("user-service:9090")
+	conn, err := grpc.NewClient("user-service:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to gRPC server: %v", err)
 	}
@@ -36,7 +38,9 @@ func main() {
 	}
 	defer dbConn.Close()
 
-	userService := service.NewAuthService(client, nil /*emailSender*/, nil /*accessRepo*/)
+	accessRepo := infrastructure.NewAccessRepository(dbConn)
+
+	userService := service.NewAuthService(client, accessRepo, nil /* EmailSender */)
 
 	r := gin.Default()
 	ginapp.InitRoutes(r, userService, logger)

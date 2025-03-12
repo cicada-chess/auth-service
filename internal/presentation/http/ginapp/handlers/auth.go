@@ -10,7 +10,6 @@ import (
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/response"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/http/ginapp/dto"
-	"google.golang.org/grpc"
 )
 
 // @title Auth API
@@ -23,7 +22,13 @@ import (
 type AuthHandler struct {
 	Service interfaces.AuthService
 	Logger  *logrus.Logger
-	Client  *grpc.ClientConn
+}
+
+func NewAuthHandler(service interfaces.AuthService, logger *logrus.Logger) *AuthHandler {
+	return &AuthHandler{
+		Service: service,
+		Logger:  logger,
+	}
 }
 
 // Login godoc
@@ -250,8 +255,14 @@ func (h *AuthHandler) Access(c *gin.Context) {
 	err := h.Service.Access(c.Request.Context(), request.Role, request.Url)
 
 	if err != nil {
-		response.NewErrorResponse(c, http.StatusBadRequest, "Доступ запрещён")
-		return
+		switch err {
+		case auth.ErrPermissionDenied:
+			response.NewErrorResponse(c, http.StatusForbidden, "Доступ запрещён")
+			return
+		default:
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Доступ разрешён", nil)
