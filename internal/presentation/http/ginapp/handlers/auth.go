@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,14 +19,14 @@ import (
 // @BasePath /api/v1
 
 type AuthHandler struct {
-	Service interfaces.AuthService
-	Logger  *logrus.Logger
+	service interfaces.AuthService
+	logger  *logrus.Logger
 }
 
 func NewAuthHandler(service interfaces.AuthService, logger *logrus.Logger) *AuthHandler {
 	return &AuthHandler{
-		Service: service,
-		Logger:  logger,
+		service: service,
+		logger:  logger,
 	}
 }
 
@@ -45,24 +44,27 @@ func NewAuthHandler(service interfaces.AuthService, logger *logrus.Logger) *Auth
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var request dto.LoginRequest
-
-	if err := c.BindJSON(&request); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
+		h.logger.Errorf("Error binding request: %v", err)
 		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	token, err := h.Service.Login(c.Request.Context(), request.Email, request.Password)
+	token, err := h.service.Login(c.Request.Context(), request.Email, request.Password)
 
 	if err != nil {
-		if errors.Is(err, auth.ErrInvalidCredentials) {
+		h.logger.Errorf("Error logging in: %v", err)
+		switch err {
+		case auth.ErrInvalidCredentials:
 			response.NewErrorResponse(c, http.StatusBadRequest, "Неверные учетные данные")
-		} else if errors.Is(err, auth.ErrUserBlocked) {
+			return
+		case auth.ErrUserBlocked:
 			response.NewErrorResponse(c, http.StatusForbidden, "Пользователь заблокирован")
-		} else {
+			return
+		default:
 			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
 		}
-		return
-
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Авторизация успешна", gin.H{
@@ -89,8 +91,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	err := h.Service.Check(c.Request.Context(), tokenHeader)
+	err := h.service.Check(c.Request.Context(), tokenHeader)
 	if err != nil {
+		h.logger.Errorf("Error token check: %v", err)
 		response.NewErrorResponse(c, http.StatusUnauthorized, "Неавторизованный доступ")
 		return
 	}
@@ -115,19 +118,23 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	var request dto.RefreshRequest
 
 	if err := c.BindJSON(&request); err != nil {
+		h.logger.Errorf("Error binding request: %v", err)
 		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	token, err := h.Service.Refresh(c.Request.Context(), request.RefreshToken)
+	token, err := h.service.Refresh(c.Request.Context(), request.RefreshToken)
 
 	if err != nil {
-		if errors.Is(err, auth.ErrTokenInvalidOrExpired) {
+		h.logger.Errorf("Error refreshing token: %v", err)
+		switch err {
+		case auth.ErrTokenInvalidOrExpired:
 			response.NewErrorResponse(c, http.StatusUnauthorized, "Недействительный или истекший refresh token")
-		} else {
-			response.NewErrorResponse(c, http.StatusInternalServerError, "Внутренняя ошибка сервера")
+			return
+		default:
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
 		}
-		return
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Новый токен успешно получен", gin.H{
@@ -152,9 +159,10 @@ func (h *AuthHandler) Check(c *gin.Context) {
 		return
 	}
 
-	err := h.Service.Check(c.Request.Context(), tokenHeader)
+	err := h.service.Check(c.Request.Context(), tokenHeader)
 
 	if err != nil {
+		h.logger.Errorf("Error token check: %v", err)
 		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истек")
 		return
 	}
@@ -177,18 +185,22 @@ func (h *AuthHandler) Check(c *gin.Context) {
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var request dto.ForgotPasswordRequest
 	if err := c.BindJSON(&request); err != nil {
+		h.logger.Errorf("Error binding request: %v", err)
 		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err := h.Service.ForgotPassword(c.Request.Context(), request.Email)
+	err := h.service.ForgotPassword(c.Request.Context(), request.Email)
 	if err != nil {
-		if errors.Is(err, auth.ErrUserNotFound) {
+		h.logger.Errorf("Error sending reset password link: %v", err)
+		switch err {
+		case auth.ErrUserNotFound:
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь с указанным email не найден")
-		} else {
-			response.NewErrorResponse(c, http.StatusInternalServerError, "Внутренняя ошибка сервера")
+			return
+		default:
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
 		}
-		return
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Ссылка для восстановления отправлена", nil)
@@ -208,17 +220,18 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var request dto.ResetPasswordRequest
 	if err := c.BindJSON(&request); err != nil {
+		h.logger.Errorf("Error binding request: %v", err)
 		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err := h.Service.ResetPassword(c.Request.Context(), request.Token, request.NewPassword)
+	err := h.service.ResetPassword(c.Request.Context(), request.Token, request.NewPassword)
 
 	if err != nil {
+		h.logger.Errorf("Error resetting password: %v", err)
 		response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
 		return
 	}
-
 	response.NewSuccessResponse(c, http.StatusOK, "Пароль успешно изменен", nil)
 
 }
@@ -241,20 +254,23 @@ func (h *AuthHandler) Access(c *gin.Context) {
 		return
 	}
 
-	if err := h.Service.Check(c.Request.Context(), tokenHeader); err != nil {
+	if err := h.service.Check(c.Request.Context(), tokenHeader); err != nil {
+		h.logger.Errorf("Error token check: %v", err)
 		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
 		return
 	}
 
 	var request dto.AccessRequest
 	if err := c.BindJSON(&request); err != nil {
+		h.logger.Errorf("Error binding request: %v", err)
 		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	err := h.Service.Access(c.Request.Context(), request.Role, request.Url)
+	err := h.service.Access(c.Request.Context(), request.Role, request.Url)
 
 	if err != nil {
+		h.logger.Errorf("Error checking access: %v", err)
 		switch err {
 		case auth.ErrPermissionDenied:
 			response.NewErrorResponse(c, http.StatusForbidden, "Доступ запрещён")
