@@ -61,6 +61,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		case auth.ErrUserBlocked:
 			response.NewErrorResponse(c, http.StatusForbidden, "Пользователь заблокирован")
 			return
+		case auth.ErrUserNotFound:
+			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
+			return
 		default:
 			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
@@ -229,8 +232,20 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 
 	if err != nil {
 		h.logger.Errorf("Error resetting password: %v", err)
-		response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
-		return
+		switch err {
+		case auth.ErrTokenInvalidOrExpired:
+			response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
+			return
+		case auth.ErrUserNotFound:
+			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
+			return
+		case auth.ErrInvalidCredentials:
+			response.NewErrorResponse(c, http.StatusBadRequest, "Недопустимый пароль")
+			return
+		default:
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
 	}
 	response.NewSuccessResponse(c, http.StatusOK, "Пароль успешно изменен", nil)
 

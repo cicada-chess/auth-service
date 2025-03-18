@@ -15,6 +15,8 @@ import (
 	authInterfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	userEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/user/entity"
 	pb "gitlab.mai.ru/cicada-chess/backend/user-service/pkg/user"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -48,7 +50,15 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 	req := &pb.GetUserByEmailRequest{Email: email}
 	user, err := s.client.GetUserByEmail(ctx, req)
 	if err != nil {
-		return nil, err
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return nil, ErrUserNotFound
+			default:
+				return nil, ErrInternalServer
+			}
+		}
 	}
 
 	if user == nil && errors.Is(err, nil) {
@@ -109,6 +119,11 @@ func (s *authService) Check(ctx context.Context, tokenHeader string) error {
 		return ErrTokenInvalidOrExpired
 	}
 
+	token_type, ok := claims["token_type"].(string)
+	if !ok || token_type != "access" {
+		return ErrTokenInvalidOrExpired
+	}
+
 	return nil
 }
 
@@ -134,6 +149,11 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 		return nil, ErrTokenInvalidOrExpired
 	}
 
+	token_type, ok := claims["token_type"].(string)
+	if !ok || token_type != "refresh" {
+		return nil, ErrTokenInvalidOrExpired
+	}
+
 	accessToken, err := auth.GenerateAccessToken(claims["user_id"].(string), int(claims["role"].(float64)))
 
 	if err != nil {
@@ -149,8 +169,16 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 func (s *authService) ForgotPassword(ctx context.Context, email string) error {
 	req := &pb.GetUserByEmailRequest{Email: email}
 	user, err := s.client.GetUserByEmail(ctx, req)
-	if err != nil || user == nil {
-		return ErrUserNotFound
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return ErrUserNotFound
+			default:
+				return ErrInternalServer
+			}
+		}
 	}
 
 	resetToken, err := auth.GenerateResetToken(user.Id, int(user.Role))
@@ -186,11 +214,27 @@ func (s *authService) ResetPassword(ctx context.Context, resetToken string, newP
 		return ErrTokenInvalidOrExpired
 	}
 
-	req := &pb.UpdateUserPasswordRequest{Id: userID, Password: newPassword}
-	status, err := s.client.UpdateUserPassword(ctx, req)
-	if err != nil && status == nil {
-		return ErrInternalServer
+	token_type, ok := claims["token_type"].(string)
+	if !ok || token_type != "reset" {
+		return ErrTokenInvalidOrExpired
 	}
+
+	req := &pb.UpdateUserPasswordRequest{Id: userID, Password: newPassword}
+	response, err := s.client.UpdateUserPassword(ctx, req)
+	if err != nil && response == nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.InvalidArgument:
+				return ErrInvalidCredentials
+			case codes.NotFound:
+				return ErrUserNotFound
+			case codes.Internal:
+				return ErrInternalServer
+			}
+		}
+	}
+
 	return nil
 }
 
