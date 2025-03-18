@@ -1,4 +1,4 @@
-package auth_test
+package auth_tests
 
 import (
 	"context"
@@ -16,7 +16,7 @@ func TestAuthService_Access_PermissionGranted(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockAccessRepo := mock_interfaces.NewMockAccessRepository(ctrl)
-	svc := auth.NewAuthService(nil, nil, mockAccessRepo)
+	svc := auth.NewAuthService(nil, mockAccessRepo, nil)
 	ctx := context.Background()
 
 	protectedUrl := &accessEntity.ProtectedUrl{
@@ -35,7 +35,7 @@ func TestAuthService_Access_PermissionDenied(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockAccessRepo := mock_interfaces.NewMockAccessRepository(ctrl)
-	svc := auth.NewAuthService(nil, nil, mockAccessRepo)
+	svc := auth.NewAuthService(nil, mockAccessRepo, nil)
 	ctx := context.Background()
 
 	protectedUrl := &accessEntity.ProtectedUrl{
@@ -54,7 +54,7 @@ func TestAuthService_Access_UrlNotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockAccessRepo := mock_interfaces.NewMockAccessRepository(ctrl)
-	svc := auth.NewAuthService(nil, nil, mockAccessRepo)
+	svc := auth.NewAuthService(nil, mockAccessRepo, nil)
 	ctx := context.Background()
 
 	mockAccessRepo.EXPECT().GetProtectedUrl(ctx, "/nonexistent").Return(nil, auth.ErrUrlNotFound)

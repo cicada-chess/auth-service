@@ -14,6 +14,9 @@ import (
 	auth "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
 	authInterfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	userEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/user/entity"
+	pb "gitlab.mai.ru/cicada-chess/backend/user-service/pkg/user"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -27,14 +30,14 @@ var (
 )
 
 type authService struct {
-	authRepo    authInterfaces.AuthRepository
+	client      pb.UserServiceClient
 	accessRepo  accessInterfaces.AccessRepository
 	emailSender senderInterface.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 }
 
-func NewAuthService(authRepo authInterfaces.AuthRepository, emailSender senderInterface.EmailSender, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
+func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.AccessRepository, emailSender senderInterface.EmailSender) authInterfaces.AuthService {
 	return &authService{
-		authRepo:    authRepo,
+		client:      client,
 		accessRepo:  accessRepo,
 		emailSender: emailSender, // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 	}
@@ -44,9 +47,18 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 
 	token := &auth.Token{}
 
-	user, err := s.authRepo.GetUserByEmail(ctx, email)
+	req := &pb.GetUserByEmailRequest{Email: email}
+	user, err := s.client.GetUserByEmail(ctx, req)
 	if err != nil {
-		return nil, ErrInternalServer
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return nil, ErrUserNotFound
+			default:
+				return nil, ErrInternalServer
+			}
+		}
 	}
 
 	if user == nil && errors.Is(err, nil) {
@@ -61,13 +73,13 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 		return nil, ErrInvalidCredentials
 	}
 
-	token.RefreshToken, err = auth.GenerateRefreshToken(user.ID, user.Role)
+	token.RefreshToken, err = auth.GenerateRefreshToken(user.Id, int(user.Role))
 
 	if err != nil {
 		return nil, err
 	}
 
-	token.AccessToken, err = auth.GenerateAccessToken(user.ID, user.Role)
+	token.AccessToken, err = auth.GenerateAccessToken(user.Id, int(user.Role))
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +119,11 @@ func (s *authService) Check(ctx context.Context, tokenHeader string) error {
 		return ErrTokenInvalidOrExpired
 	}
 
+	token_type, ok := claims["token_type"].(string)
+	if !ok || token_type != "access" {
+		return ErrTokenInvalidOrExpired
+	}
+
 	return nil
 }
 
@@ -132,6 +149,11 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 		return nil, ErrTokenInvalidOrExpired
 	}
 
+	token_type, ok := claims["token_type"].(string)
+	if !ok || token_type != "refresh" {
+		return nil, ErrTokenInvalidOrExpired
+	}
+
 	accessToken, err := auth.GenerateAccessToken(claims["user_id"].(string), int(claims["role"].(float64)))
 
 	if err != nil {
@@ -145,12 +167,21 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 }
 
 func (s *authService) ForgotPassword(ctx context.Context, email string) error {
-	user, err := s.authRepo.GetUserByEmail(ctx, email)
-	if err != nil || user == nil {
-		return ErrUserNotFound
+	req := &pb.GetUserByEmailRequest{Email: email}
+	user, err := s.client.GetUserByEmail(ctx, req)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return ErrUserNotFound
+			default:
+				return ErrInternalServer
+			}
+		}
 	}
 
-	resetToken, err := auth.GenerateResetToken(user.ID, user.Role)
+	resetToken, err := auth.GenerateResetToken(user.Id, int(user.Role))
 	if err != nil {
 		return err
 	}
@@ -183,13 +214,34 @@ func (s *authService) ResetPassword(ctx context.Context, resetToken string, newP
 		return ErrTokenInvalidOrExpired
 	}
 
-	return s.authRepo.UpdateUserPassword(ctx, userID, newPassword)
+	token_type, ok := claims["token_type"].(string)
+	if !ok || token_type != "reset" {
+		return ErrTokenInvalidOrExpired
+	}
+
+	req := &pb.UpdateUserPasswordRequest{Id: userID, Password: newPassword}
+	response, err := s.client.UpdateUserPassword(ctx, req)
+	if err != nil && response == nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.InvalidArgument:
+				return ErrInvalidCredentials
+			case codes.NotFound:
+				return ErrUserNotFound
+			case codes.Internal:
+				return ErrInternalServer
+			}
+		}
+	}
+
+	return nil
 }
 
 func (s *authService) Access(ctx context.Context, role int, url string) error {
 	protectedUrl, err := s.accessRepo.GetProtectedUrl(ctx, url)
 	if err != nil {
-		return ErrUrlNotFound
+		return err
 	}
 	if !accessEntity.CheckPermission(protectedUrl.Roles, role) {
 		return ErrPermissionDenied

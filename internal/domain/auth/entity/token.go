@@ -23,6 +23,7 @@ func GenerateAccessToken(userId string, Role int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    userId,
 		"role":       Role,
+		"token_type": "access",
 		"expires_at": time.Now().Add(AccessTokenTTL).Unix(),
 	})
 
@@ -33,6 +34,7 @@ func GenerateRefreshToken(userId string, Role int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    userId,
 		"role":       Role,
+		"token_type": "refresh",
 		"expires_at": time.Now().Add(RefreshTokenTTL).Unix(),
 	})
 
@@ -43,6 +45,7 @@ func GenerateResetToken(userId string, Role int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    userId,
 		"role":       Role,
+		"token_type": "reset",
 		"expires_at": time.Now().Add(ResetPasswordTokenTTL).Unix(),
 	})
 

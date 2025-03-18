@@ -1,4 +1,4 @@
-package auth_test
+package auth_tests
 
 import (
 	"context"
@@ -8,15 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
 	authEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
-	mock_interfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/mocks"
+	mock_user_service "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/user/mocks"
+	pb "gitlab.mai.ru/cicada-chess/backend/user-service/pkg/user"
 )
 
 func TestAuthService_ResetPassword_InvalidToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockAuthRepo := mock_interfaces.NewMockAuthRepository(ctrl)
-	svc := auth.NewAuthService(mockAuthRepo, nil, nil)
+	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
+	svc := auth.NewAuthService(mockUserService, nil, nil)
 	ctx := context.Background()
 
 	err := svc.ResetPassword(ctx, "invalid_token", "new_password")
@@ -27,14 +28,15 @@ func TestAuthService_ResetPassword_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockAuthRepo := mock_interfaces.NewMockAuthRepository(ctrl)
-	svc := auth.NewAuthService(mockAuthRepo, nil, nil)
+	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
+	svc := auth.NewAuthService(mockUserService, nil, nil)
 	ctx := context.Background()
 
 	resetToken, err := authEntity.GenerateResetToken("1", 1)
 	assert.NoError(t, err)
-
-	mockAuthRepo.EXPECT().UpdateUserPassword(ctx, "1", "new_password").Return(nil)
+	request := &pb.UpdateUserPasswordRequest{Id: "1", Password: "new_password"}
+	response := &pb.UpdateUserPasswordResponse{Status: "success"}
+	mockUserService.EXPECT().UpdateUserPassword(ctx, request).Return(response, nil)
 	err = svc.ResetPassword(ctx, resetToken, "new_password")
 	assert.NoError(t, err)
 }

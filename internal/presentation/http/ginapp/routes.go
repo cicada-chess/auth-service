@@ -11,7 +11,7 @@ import (
 )
 
 func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Logger) {
-	handler := &handlers.AuthHandler{Service: service, Logger: logger}
+	handler := handlers.NewAuthHandler(service, logger)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := r.Group("/auth")
 	{
