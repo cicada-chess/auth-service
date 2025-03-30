@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -54,14 +55,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	if err != nil {
 		h.logger.Errorf("Error logging in: %v", err)
-		switch err {
-		case auth.ErrInvalidCredentials:
+		switch {
+		case errors.Is(err, auth.ErrInvalidCredentials):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Неверные учетные данные")
 			return
-		case auth.ErrUserBlocked:
+		case errors.Is(err, auth.ErrUserBlocked):
 			response.NewErrorResponse(c, http.StatusForbidden, "Пользователь заблокирован")
 			return
-		case auth.ErrUserNotFound:
+		case errors.Is(err, auth.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
 			return
 		default:
@@ -130,8 +131,8 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 
 	if err != nil {
 		h.logger.Errorf("Error refreshing token: %v", err)
-		switch err {
-		case auth.ErrTokenInvalidOrExpired:
+		switch {
+		case errors.Is(err, auth.ErrTokenInvalidOrExpired):
 			response.NewErrorResponse(c, http.StatusUnauthorized, "Недействительный или истекший refresh token")
 			return
 		default:
@@ -196,8 +197,8 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	err := h.service.ForgotPassword(c.Request.Context(), request.Email)
 	if err != nil {
 		h.logger.Errorf("Error sending reset password link: %v", err)
-		switch err {
-		case auth.ErrUserNotFound:
+		switch {
+		case errors.Is(err, auth.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь с указанным email не найден")
 			return
 		default:
@@ -232,14 +233,14 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 
 	if err != nil {
 		h.logger.Errorf("Error resetting password: %v", err)
-		switch err {
-		case auth.ErrTokenInvalidOrExpired:
+		switch {
+		case errors.Is(err, auth.ErrTokenInvalidOrExpired):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
 			return
-		case auth.ErrUserNotFound:
+		case errors.Is(err, auth.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
 			return
-		case auth.ErrInvalidCredentials:
+		case errors.Is(err, auth.ErrInvalidCredentials):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Недопустимый пароль")
 			return
 		default:
@@ -286,8 +287,8 @@ func (h *AuthHandler) Access(c *gin.Context) {
 
 	if err != nil {
 		h.logger.Errorf("Error checking access: %v", err)
-		switch err {
-		case auth.ErrPermissionDenied:
+		switch {
+		case errors.Is(err, auth.ErrPermissionDenied):
 			response.NewErrorResponse(c, http.StatusForbidden, "Доступ запрещён")
 			return
 		default:
