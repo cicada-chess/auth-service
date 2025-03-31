@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
+	application "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/response"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/http/ginapp/dto"
@@ -56,13 +56,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorf("Error logging in: %v", err)
 		switch {
-		case errors.Is(err, auth.ErrInvalidCredentials):
+		case errors.Is(err, application.ErrInvalidCredentials):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Неверные учетные данные")
 			return
-		case errors.Is(err, auth.ErrUserBlocked):
+		case errors.Is(err, application.ErrUserBlocked):
 			response.NewErrorResponse(c, http.StatusForbidden, "Пользователь заблокирован")
 			return
-		case errors.Is(err, auth.ErrUserNotFound):
+		case errors.Is(err, application.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
 			return
 		default:
@@ -132,7 +132,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorf("Error refreshing token: %v", err)
 		switch {
-		case errors.Is(err, auth.ErrTokenInvalidOrExpired):
+		case errors.Is(err, application.ErrTokenInvalidOrExpired):
 			response.NewErrorResponse(c, http.StatusUnauthorized, "Недействительный или истекший refresh token")
 			return
 		default:
@@ -198,7 +198,7 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorf("Error sending reset password link: %v", err)
 		switch {
-		case errors.Is(err, auth.ErrUserNotFound):
+		case errors.Is(err, application.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь с указанным email не найден")
 			return
 		default:
@@ -234,13 +234,13 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorf("Error resetting password: %v", err)
 		switch {
-		case errors.Is(err, auth.ErrTokenInvalidOrExpired):
+		case errors.Is(err, application.ErrTokenInvalidOrExpired):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
 			return
-		case errors.Is(err, auth.ErrUserNotFound):
+		case errors.Is(err, application.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
 			return
-		case errors.Is(err, auth.ErrInvalidCredentials):
+		case errors.Is(err, application.ErrInvalidCredentials):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Недопустимый пароль")
 			return
 		default:
@@ -288,7 +288,7 @@ func (h *AuthHandler) Access(c *gin.Context) {
 	if err != nil {
 		h.logger.Errorf("Error checking access: %v", err)
 		switch {
-		case errors.Is(err, auth.ErrPermissionDenied):
+		case errors.Is(err, application.ErrPermissionDenied):
 			response.NewErrorResponse(c, http.StatusForbidden, "Доступ запрещён")
 			return
 		default:
