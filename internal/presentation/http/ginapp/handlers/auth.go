@@ -38,7 +38,7 @@ func NewAuthHandler(service interfaces.AuthService, logger *logrus.Logger) *Auth
 // @Accept json
 // @Produce json
 // @Param request body dto.LoginRequest true "Данные для входа"
-// @Success 200 {object} response.SuccessResponse "Успешная авторизация"
+// @Success 200 {object} response.SuccessResponse{data=dto.Token} "Успешная авторизация"
 // @Failure 400 {object} response.ErrorResponse "Неверные учётные данные"
 // @Failure 403 {object} response.ErrorResponse "Пользователь заблокирован"
 // @Failure 500 {object} response.ErrorResponse "Внутренняя ошибка сервера"
@@ -71,11 +71,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		}
 	}
 
-	response.NewSuccessResponse(c, http.StatusOK, "Авторизация успешна", gin.H{
-		"access_token":  token.AccessToken,
-		"refresh_token": token.RefreshToken,
-		"token_type":    "bearer",
-	})
+	response.NewSuccessResponse(c, http.StatusOK, "Авторизация успешна", token)
 
 }
 
@@ -84,7 +80,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Description Завершает сессию пользователя
 // @Tags Auth
 // @Produce json
-// @Success 200 {object} response.SuccessResponse "Сессия завершена"
+// @Success 200 {object} dto.SuccessResponseWithoutData "Сессия завершена"
 // @Failure 401 {object} response.ErrorResponse "Неавторизованный доступ"
 // @Router /auth/logout [post]
 // @Param Authorization header string true "Bearer token"
@@ -113,7 +109,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.RefreshRequest true "Refresh-токен"
-// @Success 200 {object} response.SuccessResponse "Новый токен получен"
+// @Success 200 {object} response.SuccessResponse{data=dto.Token} "Новый токен получен"
 // @Failure 400 {object} response.ErrorResponse "Некорректный запрос"
 // @Failure 401 {object} response.ErrorResponse "Недействительный или истекший refresh-токен"
 // @Failure 500 {object} response.ErrorResponse "Внутренняя ошибка сервера"
@@ -141,10 +137,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		}
 	}
 
-	response.NewSuccessResponse(c, http.StatusOK, "Новый токен успешно получен", gin.H{
-		"access_token": token.AccessToken,
-		"token_type":   "bearer",
-	})
+	response.NewSuccessResponse(c, http.StatusOK, "Новый токен успешно получен", token)
 }
 
 // Check godoc
@@ -152,7 +145,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 // @Description Проверяет валидность переданного access-токена
 // @Tags Auth
 // @Produce json
-// @Success 200 {object} response.SuccessResponse "Токен действителен"
+// @Success 200 {object} dto.SuccessResponseWithoutData "Токен действителен"
 // @Failure 401 {object} response.ErrorResponse "Токен недействителен или отсутствует"
 // @Router /auth/check [get]
 // @Param Authorization header string true "Bearer token"
@@ -181,7 +174,7 @@ func (h *AuthHandler) Check(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.ForgotPasswordRequest true "Email для восстановления"
-// @Success 200 {object} response.SuccessResponse "Ссылка для восстановления отправлена"
+// @Success 200 {object} dto.SuccessResponseWithoutData "Ссылка для восстановления отправлена"
 // @Failure 400 {object} response.ErrorResponse "Некорректный запрос"
 // @Failure 404 {object} response.ErrorResponse "Пользователь не найден"
 // @Failure 500 {object} response.ErrorResponse "Внутренняя ошибка сервера"
@@ -218,7 +211,7 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.ResetPasswordRequest true "Новый пароль"
-// @Success 200 {object} response.SuccessResponse "Пароль изменён"
+// @Success 200 {object} dto.SuccessResponseWithoutData "Пароль изменён"
 // @Failure 400 {object} response.ErrorResponse "Токен недействителен или истек"
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
@@ -259,7 +252,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body dto.AccessRequest true "Роль и маршрут"
-// @Success 200 {object} response.SuccessResponse "Доступ разрешён"
+// @Success 200 {object} dto.SuccessResponseWithoutData "Доступ разрешён"
 // @Failure 400 {object} response.ErrorResponse "Недействительные данные"
 // @Failure 401 {object} response.ErrorResponse "Недействительный или отсутствующий токен"
 // @Router /auth/access [post]

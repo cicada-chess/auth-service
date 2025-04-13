@@ -45,6 +45,22 @@ definitions:
       token:
         type: string
     type: object
+  gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.Token:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -66,7 +82,7 @@ paths:
         "200":
           description: Доступ разрешён
           schema:
-            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData'
         "400":
           description: Недействительные данные
           schema:
@@ -93,7 +109,7 @@ paths:
         "200":
           description: Токен действителен
           schema:
-            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData'
         "401":
           description: Токен недействителен или отсутствует
           schema:
@@ -119,7 +135,7 @@ paths:
         "200":
           description: Ссылка для восстановления отправлена
           schema:
-            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData'
         "400":
           description: Некорректный запрос
           schema:
@@ -153,7 +169,12 @@ paths:
         "200":
           description: Успешная авторизация
           schema:
-            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            allOf:
+            - $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.Token'
+              type: object
         "400":
           description: Неверные учётные данные
           schema:
@@ -184,7 +205,7 @@ paths:
         "200":
           description: Сессия завершена
           schema:
-            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData'
         "401":
           description: Неавторизованный доступ
           schema:
@@ -210,7 +231,12 @@ paths:
         "200":
           description: Новый токен получен
           schema:
-            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            allOf:
+            - $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.Token'
+              type: object
         "400":
           description: Некорректный запрос
           schema:
@@ -244,7 +270,7 @@ paths:
         "200":
           description: Пароль изменён
           schema:
-            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse'
+            $ref: '#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData'
         "400":
           description: Токен недействителен или истек
           schema:

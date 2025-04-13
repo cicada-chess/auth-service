@@ -43,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Доступ разрешён",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData"
                         }
                     },
                     "400": {
@@ -84,7 +84,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Токен действителен",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData"
                         }
                     },
                     "401": {
@@ -124,7 +124,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Ссылка для восстановления отправлена",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData"
                         }
                     },
                     "400": {
@@ -176,7 +176,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Успешная авторизация",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.Token"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -223,7 +235,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Сессия завершена",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData"
                         }
                     },
                     "401": {
@@ -263,7 +275,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Новый токен получен",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.Token"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -315,7 +339,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Пароль изменён",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData"
                         }
                     },
                     "400": {
@@ -397,6 +421,31 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.SuccessResponseWithoutData": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.Token": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
                     "type": "string"
                 }
             }
