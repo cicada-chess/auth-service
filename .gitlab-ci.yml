@@ -2,7 +2,7 @@ stages:
     - deploy
 
 
-build-job:
+deploy-job:
     stage: deploy
     only:
         - develop
@@ -14,13 +14,9 @@ build-job:
         - ssh-keyscan -H 217.114.11.158 >> ~/.ssh/known_hosts
     script:
         - ssh root@217.114.11.158 '
-            cd ~/backend/user-service &&
-            git fetch origin &&
-            git reset --hard origin/develop &&
-            
             cd ~/backend/auth-service &&
-            git fetch origin &&
-            git reset --hard origin/develop &&
+            git switch develop &&
+            git pull origin develop &&
 
             cd ~/backend &&
             docker compose build --no-cache &&
