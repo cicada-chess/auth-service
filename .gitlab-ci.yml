@@ -1,0 +1,28 @@
+stages:
+    - deploy
+
+
+build-job:
+    stage: deploy
+    only:
+        - develop
+    before_script:
+        - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+        - echo "$SSH_PRIVATE_KEY" | tr -d "\r" | ssh-add -
+        - mkdir -p ~/.ssh
+        - chmod 700 ~/.ssh
+        - ssh-keyscan -H 217.114.11.158 >> ~/.ssh/known_hosts
+    script:
+        - ssh root@217.114.11.158 '
+            cd ~/backend/user-service &&
+            git fetch origin &&
+            git reset --hard origin/develop &&
+            
+            cd ~/backend/auth-service &&
+            git fetch origin &&
+            git reset --hard origin/develop &&
+
+            cd ~/backend &&
+            docker compose build --no-cache &&
+            docker compose up
+            '
