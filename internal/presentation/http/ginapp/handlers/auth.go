@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	_ "gitlab.mai.ru/cicada-chess/backend/auth-service/docs"
 	application "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/interfaces"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/response"
@@ -37,11 +38,11 @@ func NewAuthHandler(service interfaces.AuthService, logger *logrus.Logger) *Auth
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body dto.LoginRequest true "Данные для входа"
-// @Success 200 {object} response.SuccessResponse{data=dto.Token} "Успешная авторизация"
-// @Failure 400 {object} response.ErrorResponse "Неверные учётные данные"
-// @Failure 403 {object} response.ErrorResponse "Пользователь заблокирован"
-// @Failure 500 {object} response.ErrorResponse "Внутренняя ошибка сервера"
+// @Param request body docs.LoginRequest true "Данные для входа"
+// @Success 200 {object} docs.SuccessResponse{data=docs.Token} "Успешная авторизация"
+// @Failure 400 {object} docs.ErrorResponse "Неверные учётные данные"
+// @Failure 403 {object} docs.ErrorResponse "Пользователь заблокирован"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка сервера"
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var request dto.LoginRequest
@@ -71,7 +72,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		}
 	}
 
-	response.NewSuccessResponse(c, http.StatusOK, "Авторизация успешна", token)
+	dtoToken := &dto.Token{
+		AccessToken:      token.AccessToken,
+		RefreshToken:     token.RefreshToken,
+		TokenType:        token.TokenType,
+		AccessExpiresIn:  token.AccessExpiresIn,
+		RefreshExpiresIn: token.RefreshExpiresIn,
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Авторизация успешна", dtoToken)
 
 }
 
@@ -80,8 +89,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Description Завершает сессию пользователя
 // @Tags Auth
 // @Produce json
-// @Success 200 {object} dto.SuccessResponseWithoutData "Сессия завершена"
-// @Failure 401 {object} response.ErrorResponse "Неавторизованный доступ"
+// @Success 200 {object} docs.SuccessResponseWithoutData "Сессия завершена"
+// @Failure 401 {object} docs.ErrorResponse "Неавторизованный доступ"
 // @Router /auth/logout [post]
 // @Param Authorization header string true "Bearer token"
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -108,11 +117,11 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body dto.RefreshRequest true "Refresh-токен"
-// @Success 200 {object} response.SuccessResponse{data=dto.Token} "Новый токен получен"
-// @Failure 400 {object} response.ErrorResponse "Некорректный запрос"
-// @Failure 401 {object} response.ErrorResponse "Недействительный или истекший refresh-токен"
-// @Failure 500 {object} response.ErrorResponse "Внутренняя ошибка сервера"
+// @Param request body docs.RefreshRequest true "Refresh-токен"
+// @Success 200 {object} docs.SuccessResponse{data=docs.AccessToken} "Новый токен получен"
+// @Failure 400 {object} docs.ErrorResponse "Некорректный запрос"
+// @Failure 401 {object} docs.ErrorResponse "Недействительный или истекший refresh-токен"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка сервера"
 // @Router /auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var request dto.RefreshRequest
@@ -137,7 +146,13 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		}
 	}
 
-	response.NewSuccessResponse(c, http.StatusOK, "Новый токен успешно получен", token)
+	dtoToken := &dto.AccessToken{
+		AccessToken: token.AccessToken,
+		TokenType:   token.TokenType,
+		ExpiresIn:   token.AccessExpiresIn,
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Новый токен успешно получен", dtoToken)
 }
 
 // Check godoc
@@ -145,8 +160,8 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 // @Description Проверяет валидность переданного access-токена
 // @Tags Auth
 // @Produce json
-// @Success 200 {object} dto.SuccessResponseWithoutData "Токен действителен"
-// @Failure 401 {object} response.ErrorResponse "Токен недействителен или отсутствует"
+// @Success 200 {object} docs.SuccessResponseWithoutData "Токен действителен"
+// @Failure 401 {object} docs.ErrorResponse "Токен недействителен или отсутствует"
 // @Router /auth/check [get]
 // @Param Authorization header string true "Bearer token"
 func (h *AuthHandler) Check(c *gin.Context) {
@@ -173,11 +188,11 @@ func (h *AuthHandler) Check(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body dto.ForgotPasswordRequest true "Email для восстановления"
-// @Success 200 {object} dto.SuccessResponseWithoutData "Ссылка для восстановления отправлена"
-// @Failure 400 {object} response.ErrorResponse "Некорректный запрос"
-// @Failure 404 {object} response.ErrorResponse "Пользователь не найден"
-// @Failure 500 {object} response.ErrorResponse "Внутренняя ошибка сервера"
+// @Param request body docs.ForgotPasswordRequest true "Email для восстановления"
+// @Success 200 {object} docs.SuccessResponseWithoutData "Ссылка для восстановления отправлена"
+// @Failure 400 {object} docs.ErrorResponse "Некорректный запрос"
+// @Failure 404 {object} docs.ErrorResponse "Пользователь не найден"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка сервера"
 // @Router /auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	var request dto.ForgotPasswordRequest
@@ -210,9 +225,9 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body dto.ResetPasswordRequest true "Новый пароль"
-// @Success 200 {object} dto.SuccessResponseWithoutData "Пароль изменён"
-// @Failure 400 {object} response.ErrorResponse "Токен недействителен или истек"
+// @Param request body docs.ResetPasswordRequest true "Новый пароль"
+// @Success 200 {object} docs.SuccessResponseWithoutData "Пароль изменён"
+// @Failure 400 {object} docs.ErrorResponse "Токен недействителен или истек"
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var request dto.ResetPasswordRequest
@@ -251,10 +266,10 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param request body dto.AccessRequest true "Роль и маршрут"
-// @Success 200 {object} dto.SuccessResponseWithoutData "Доступ разрешён"
-// @Failure 400 {object} response.ErrorResponse "Недействительные данные"
-// @Failure 401 {object} response.ErrorResponse "Недействительный или отсутствующий токен"
+// @Param request body docs.AccessRequest true "Роль и маршрут"
+// @Success 200 {object} docs.SuccessResponseWithoutData "Доступ разрешён"
+// @Failure 400 {object} docs.ErrorResponse "Недействительные данные"
+// @Failure 401 {object} docs.ErrorResponse "Недействительный или отсутствующий токен"
 // @Router /auth/access [post]
 func (h *AuthHandler) Access(c *gin.Context) {
 	tokenHeader := c.GetHeader("Authorization")

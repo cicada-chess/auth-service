@@ -44,9 +44,6 @@ func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.Acc
 }
 
 func (s *authService) Login(ctx context.Context, email string, password string) (*auth.Token, error) {
-
-	token := &auth.Token{}
-
 	req := &pb.GetUserByEmailRequest{Email: email}
 	user, err := s.client.GetUserByEmail(ctx, req)
 	if err != nil {
@@ -73,13 +70,7 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 		return nil, ErrInvalidCredentials
 	}
 
-	token.RefreshToken, err = auth.GenerateRefreshToken(user.Id, int(user.Role))
-
-	if err != nil {
-		return nil, err
-	}
-
-	token.AccessToken, err = auth.GenerateAccessToken(user.Id, int(user.Role))
+	token, err := auth.GenerateToken(user.Id, int(user.Role))
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +152,9 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 	}
 
 	return &auth.Token{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:     accessToken,
+		AccessExpiresIn: int(auth.AccessTokenTTL.Seconds()),
+		TokenType:       "Bearer",
 	}, nil
 }
 
