@@ -13,13 +13,6 @@ import (
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/http/ginapp/dto"
 )
 
-// @title Auth API
-// @version 1.0
-// @description API для аутентификации пользователей
-
-// @host localhost:8080
-// @BasePath /api/v1
-
 type AuthHandler struct {
 	service interfaces.AuthService
 	logger  *logrus.Logger
@@ -92,7 +85,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Success 200 {object} docs.SuccessResponseWithoutData "Сессия завершена"
 // @Failure 401 {object} docs.ErrorResponse "Неавторизованный доступ"
 // @Router /auth/logout [post]
-// @Param Authorization header string true "Bearer token"
+// @Security BearerAuth
 func (h *AuthHandler) Logout(c *gin.Context) {
 	tokenHeader := c.GetHeader("Authorization")
 	if tokenHeader == "" {
@@ -163,7 +156,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 // @Success 200 {object} docs.SuccessResponseWithoutData "Токен действителен"
 // @Failure 401 {object} docs.ErrorResponse "Токен недействителен или отсутствует"
 // @Router /auth/check [get]
-// @Param Authorization header string true "Bearer token"
+// @security BearerAuth
 func (h *AuthHandler) Check(c *gin.Context) {
 	tokenHeader := c.GetHeader("Authorization")
 	if tokenHeader == "" {

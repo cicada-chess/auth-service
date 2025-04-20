@@ -20,6 +20,17 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// @title Auth API
+// @version 1.0
+// @description API для аутентификации пользователей
+
+// @host localhost:8081
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 func main() {
 	logger := logger.New()
 

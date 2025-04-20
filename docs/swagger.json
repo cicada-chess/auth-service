@@ -1,8 +1,13 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API для аутентификации пользователей",
+        "title": "Auth API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8081",
+    "basePath": "/",
     "paths": {
         "/auth/access": {
             "post": {
@@ -52,6 +57,11 @@
         },
         "/auth/check": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Проверяет валидность переданного access-токена",
                 "produces": [
                     "application/json"
@@ -60,15 +70,6 @@
                     "Auth"
                 ],
                 "summary": "Проверка токена",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Токен действителен",
@@ -203,6 +204,11 @@
         },
         "/auth/logout": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Завершает сессию пользователя",
                 "produces": [
                     "application/json"
@@ -211,15 +217,6 @@
                     "Auth"
                 ],
                 "summary": "Выход пользователя",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Сессия завершена",
@@ -458,6 +455,13 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

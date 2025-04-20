@@ -1,3 +1,4 @@
+basePath: /
 definitions:
   docs.AccessRequest:
     properties:
@@ -74,8 +75,12 @@ definitions:
       token_type:
         type: string
     type: object
+host: localhost:8081
 info:
   contact: {}
+  description: API для аутентификации пользователей
+  title: Auth API
+  version: "1.0"
 paths:
   /auth/access:
     post:
@@ -110,12 +115,6 @@ paths:
   /auth/check:
     get:
       description: Проверяет валидность переданного access-токена
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -127,6 +126,8 @@ paths:
           description: Токен недействителен или отсутствует
           schema:
             $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Проверка токена
       tags:
       - Auth
@@ -206,12 +207,6 @@ paths:
   /auth/logout:
     post:
       description: Завершает сессию пользователя
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -223,6 +218,8 @@ paths:
           description: Неавторизованный доступ
           schema:
             $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Выход пользователя
       tags:
       - Auth
@@ -291,4 +288,9 @@ paths:
       summary: Сброс пароля
       tags:
       - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
