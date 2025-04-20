@@ -13,7 +13,7 @@ import (
 
 func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Logger) {
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:8081"}, // Разрешенные источники
+		AllowOrigins:     []string{"http://localhost:3000"}, // Разрешенные источники
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
