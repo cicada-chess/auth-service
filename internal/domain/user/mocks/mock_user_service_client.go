@@ -56,6 +56,26 @@ func (mr *MockUserServiceClientMockRecorder) GetUserByEmail(ctx, in interface{},
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockUserServiceClient)(nil).GetUserByEmail), varargs...)
 }
 
+// GetUserById mocks base method.
+func (m *MockUserServiceClient) GetUserById(ctx context.Context, in *user.GetUserByIdRequest, opts ...grpc.CallOption) (*user.GetUserByIdResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetUserById", varargs...)
+	ret0, _ := ret[0].(*user.GetUserByIdResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserById indicates an expected call of GetUserById.
+func (mr *MockUserServiceClientMockRecorder) GetUserById(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockUserServiceClient)(nil).GetUserById), varargs...)
+}
+
 // UpdateUserPassword mocks base method.
 func (m *MockUserServiceClient) UpdateUserPassword(ctx context.Context, in *user.UpdateUserPasswordRequest, opts ...grpc.CallOption) (*user.UpdateUserPasswordResponse, error) {
 	m.ctrl.T.Helper()
@@ -112,6 +132,21 @@ func (m *MockUserServiceServer) GetUserByEmail(arg0 context.Context, arg1 *user.
 func (mr *MockUserServiceServerMockRecorder) GetUserByEmail(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockUserServiceServer)(nil).GetUserByEmail), arg0, arg1)
+}
+
+// GetUserById mocks base method.
+func (m *MockUserServiceServer) GetUserById(arg0 context.Context, arg1 *user.GetUserByIdRequest) (*user.GetUserByIdResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserById", arg0, arg1)
+	ret0, _ := ret[0].(*user.GetUserByIdResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserById indicates an expected call of GetUserById.
+func (mr *MockUserServiceServerMockRecorder) GetUserById(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockUserServiceServer)(nil).GetUserById), arg0, arg1)
 }
 
 // UpdateUserPassword mocks base method.

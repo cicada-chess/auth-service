@@ -11,7 +11,7 @@ require (
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.4
-	gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250311175322-367e724e09d8
+	gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250420133733-7a74cf681c9b
 )
 
 require (

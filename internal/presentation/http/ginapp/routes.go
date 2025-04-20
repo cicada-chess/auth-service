@@ -23,12 +23,13 @@ func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Lo
 	api := r.Group("/auth")
 	{
 		api.POST("/login", handler.Login)
-		api.POST("/logout", handler.Logout)
+		api.GET("/logout", handler.Logout)
 		api.POST("/refresh", handler.Refresh)
 		api.GET("/check", handler.Check)
 		api.POST("/forgot-password", handler.ForgotPassword)
 		api.POST("/reset-password", handler.ResetPassword)
 		api.POST("/access", handler.Access)
+		api.GET("/me", handler.Me)
 
 	}
 }

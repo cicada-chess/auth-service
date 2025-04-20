@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
+	userEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/user/entity"
 )
 
 type AuthService interface {
@@ -13,4 +14,5 @@ type AuthService interface {
 	ForgotPassword(ctx context.Context, email string) error
 	ResetPassword(ctx context.Context, resetToken string, newPassword string) error
 	Access(ctx context.Context, role int, url string) error
+	Me(ctx context.Context, tokenHeader string) (*userEntity.User, error)
 }

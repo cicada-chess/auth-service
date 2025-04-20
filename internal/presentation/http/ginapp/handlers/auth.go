@@ -84,7 +84,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} docs.SuccessResponseWithoutData "Сессия завершена"
 // @Failure 401 {object} docs.ErrorResponse "Неавторизованный доступ"
-// @Router /auth/logout [post]
+// @Router /auth/logout [get]
 // @Security BearerAuth
 func (h *AuthHandler) Logout(c *gin.Context) {
 	tokenHeader := c.GetHeader("Authorization")
@@ -299,4 +299,59 @@ func (h *AuthHandler) Access(c *gin.Context) {
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Доступ разрешён", nil)
+}
+
+// Me godoc
+// @Summary Получение информации о пользователе по access-токену
+// @Description Возвращает информацию о пользователе, если токен действителен
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} docs.SuccessResponse{data=docs.User} "Информация о пользователе"
+// @Failure 400 {object} docs.ErrorResponse "Неверный UUID пользователя"
+// @Failure 401 {object} docs.ErrorResponse "Недействительный или отсутствующий токен"
+// @Failure 404 {object} docs.ErrorResponse "Пользователь не найден"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка сервера"
+// @Router /auth/me [get]
+// @Security BearerAuth
+func (h *AuthHandler) Me(c *gin.Context) {
+	tokenHeader := c.GetHeader("Authorization")
+	if tokenHeader == "" {
+		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
+		return
+	}
+
+	if err := h.service.Check(c.Request.Context(), tokenHeader); err != nil {
+		h.logger.Errorf("Error token check: %v", err)
+		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
+		return
+	}
+
+	user, err := h.service.Me(c.Request.Context(), tokenHeader)
+	if err != nil {
+		h.logger.Errorf("Error getting user info: %v", err)
+		switch {
+		case errors.Is(err, application.ErrUserNotFound):
+			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
+			return
+		case errors.Is(err, application.ErrInvalidCredentials):
+			response.NewErrorResponse(c, http.StatusBadRequest, "Неверный UUID пользователя")
+			return
+		default:
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	dtoUser := &dto.User{
+		ID:        user.ID,
+		Username:  user.Username,
+		Email:     user.Email,
+		Role:      user.Role,
+		Rating:    user.Rating,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		IsActive:  user.IsActive,
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Информация о пользователе", dtoUser)
 }

@@ -75,6 +75,25 @@ definitions:
       token_type:
         type: string
     type: object
+  docs.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      rating:
+        type: integer
+      role:
+        type: integer
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
 host: localhost:8081
 info:
   contact: {}
@@ -205,7 +224,7 @@ paths:
       tags:
       - Auth
   /auth/logout:
-    post:
+    get:
       description: Завершает сессию пользователя
       produces:
       - application/json
@@ -221,6 +240,42 @@ paths:
       security:
       - BearerAuth: []
       summary: Выход пользователя
+      tags:
+      - Auth
+  /auth/me:
+    get:
+      description: Возвращает информацию о пользователе, если токен действителен
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о пользователе
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/docs.User'
+              type: object
+        "400":
+          description: Неверный UUID пользователя
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Недействительный или отсутствующий токен
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение информации о пользователе по access-токену
       tags:
       - Auth
   /auth/refresh:

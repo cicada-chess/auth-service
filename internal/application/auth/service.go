@@ -241,3 +241,47 @@ func (s *authService) Access(ctx context.Context, role int, url string) error {
 	return nil
 
 }
+
+func (s *authService) Me(ctx context.Context, tokenHeader string) (*userEntity.User, error) {
+	accessToken := strings.TrimPrefix(tokenHeader, "Bearer ")
+
+	token, _ := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, ErrTokenInvalidOrExpired
+		}
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+
+	claims, _ := token.Claims.(jwt.MapClaims)
+	userId, _ := claims["user_id"].(string)
+
+	req := &pb.GetUserByIdRequest{Id: userId}
+	user, err := s.client.GetUserById(ctx, req)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return nil, ErrUserNotFound
+			case codes.InvalidArgument:
+				return nil, ErrInvalidCredentials
+			case codes.Internal:
+				return nil, ErrInternalServer
+			}
+		}
+	}
+
+	entityUser := &userEntity.User{
+		ID:        user.Id,
+		Username:  user.Username,
+		Email:     user.Email,
+		Role:      int(user.Role),
+		Rating:    int(user.Rating),
+		CreatedAt: user.CreatedAt.AsTime(),
+		UpdatedAt: user.UpdatedAt.AsTime(),
+		IsActive:  user.IsActive,
+	}
+
+	return entityUser, nil
+
+}
