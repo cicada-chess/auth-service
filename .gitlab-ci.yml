@@ -6,7 +6,7 @@ deploy_auth_service:
   tags:
     - auth-runner
   only:
-    - develop
+    - feature/dev-server-ready
   script:
     - echo "[USER] Pulling latest changes from develop branch"
     - cd ~/backend/auth-service
