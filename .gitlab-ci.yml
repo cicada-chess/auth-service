@@ -9,12 +9,12 @@ deploy_auth_service:
     - feature/dev-server-ready
   script:
     - echo "[USER] Pulling latest changes from develop branch"
-    - cd ~/backend/auth-service
+    - cd /root/backend/auth-service
     - git fetch origin
     - git checkout develop
     - git pull origin develop
     - echo "[USER] Build and restart auth-service"
-    - docker compose -f ~/backend/docker-compose.yml down
-    - docker compose -f ~/backend/docker-compose.yml build auth-service
-    - docker compose -f ~/backend/docker-compose.yml up
+    - docker compose -f /root/backend/docker-compose.yml down
+    - docker compose -f /root/backend/docker-compose.yml build auth-service
+    - docker compose -f /root/backend/docker-compose.yml up
 
