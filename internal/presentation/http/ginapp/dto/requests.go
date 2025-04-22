@@ -22,3 +22,7 @@ type AccessRequest struct {
 	Role int    `json:"role"`
 	Url  string `json:"url"`
 }
+
+type MeRequest struct {
+	Id int `json:"id"`
+}

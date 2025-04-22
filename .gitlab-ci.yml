@@ -1,0 +1,20 @@
+stages:
+  - deploy
+
+deploy_auth_service:
+  stage: deploy
+  tags:
+    - auth-runner
+  only:
+    - feature/dev-server-ready
+  script:
+    - echo "[USER] Pulling latest changes from develop branch"
+    - cd /root/backend/auth-service
+    - git fetch origin
+    - git checkout develop
+    - git pull origin develop
+    - echo "[USER] Build and restart auth-service"
+    - docker compose -f /root/backend/docker-compose.yml down
+    - docker compose -f /root/backend/docker-compose.yml build auth-service
+    - docker compose -f /root/backend/docker-compose.yml up
+

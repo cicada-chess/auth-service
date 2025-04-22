@@ -50,6 +50,21 @@ func (mr *MockAuthRepositoryMockRecorder) GetUserByEmail(ctx, email interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockAuthRepository)(nil).GetUserByEmail), ctx, email)
 }
 
+// GetUserById mocks base method.
+func (m *MockAuthRepository) GetUserById(ctx context.Context, userID string) (*entity.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserById", ctx, userID)
+	ret0, _ := ret[0].(*entity.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserById indicates an expected call of GetUserById.
+func (mr *MockAuthRepositoryMockRecorder) GetUserById(ctx, userID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockAuthRepository)(nil).GetUserById), ctx, userID)
+}
+
 // UpdateUserPassword mocks base method.
 func (m *MockAuthRepository) UpdateUserPassword(ctx context.Context, userID, newPassword string) error {
 	m.ctrl.T.Helper()

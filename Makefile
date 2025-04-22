@@ -3,8 +3,8 @@ include .env
 export
 endif
 
-sourceToMock=internal/domain/user/interfaces/repository.go
-destinationToMock=internal/domain/user/mocks/mock_repository.go
+sourceToMock=internal/domain/auth/interfaces/repository.go
+destinationToMock=internal/domain/auth/mocks/mock_repository.go
 
 RUN_DIR = ./cmd/app
 

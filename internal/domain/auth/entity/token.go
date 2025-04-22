@@ -8,15 +8,17 @@ import (
 )
 
 const (
-	AccessTokenTTL        = 1 * time.Hour
-	RefreshTokenTTL       = 7 * 24 * time.Hour
-	ResetPasswordTokenTTL = 30 * time.Minute
+	AccessTokenTTL        = 3600 * time.Second
+	RefreshTokenTTL       = 7 * 24 * 3600 * time.Second
+	ResetPasswordTokenTTL = 30 * 60 * time.Second
 )
 
 type Token struct {
-	AccessToken  string
-	RefreshToken string
-	TokenType    string
+	AccessToken      string
+	RefreshToken     string
+	TokenType        string
+	AccessExpiresIn  int
+	RefreshExpiresIn int
 }
 
 func GenerateAccessToken(userId string, Role int) (string, error) {
@@ -50,4 +52,24 @@ func GenerateResetToken(userId string, Role int) (string, error) {
 	})
 
 	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+}
+
+func GenerateToken(userId string, Role int) (*Token, error) {
+	token := &Token{}
+	accessToken, err := GenerateAccessToken(userId, Role)
+	if err != nil {
+		return nil, err
+	}
+	token.AccessToken = accessToken
+
+	refreshToken, err := GenerateRefreshToken(userId, Role)
+	if err != nil {
+		return nil, err
+	}
+
+	token.RefreshToken = refreshToken
+	token.TokenType = "Bearer"
+	token.AccessExpiresIn = int(AccessTokenTTL.Seconds())
+	token.RefreshExpiresIn = int(RefreshTokenTTL.Seconds())
+	return token, nil
 }

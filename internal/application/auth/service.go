@@ -44,9 +44,6 @@ func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.Acc
 }
 
 func (s *authService) Login(ctx context.Context, email string, password string) (*auth.Token, error) {
-
-	token := &auth.Token{}
-
 	req := &pb.GetUserByEmailRequest{Email: email}
 	user, err := s.client.GetUserByEmail(ctx, req)
 	if err != nil {
@@ -73,13 +70,7 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 		return nil, ErrInvalidCredentials
 	}
 
-	token.RefreshToken, err = auth.GenerateRefreshToken(user.Id, int(user.Role))
-
-	if err != nil {
-		return nil, err
-	}
-
-	token.AccessToken, err = auth.GenerateAccessToken(user.Id, int(user.Role))
+	token, err := auth.GenerateToken(user.Id, int(user.Role))
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +152,9 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 	}
 
 	return &auth.Token{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		AccessToken:     accessToken,
+		AccessExpiresIn: int(auth.AccessTokenTTL.Seconds()),
+		TokenType:       "Bearer",
 	}, nil
 }
 
@@ -247,5 +239,49 @@ func (s *authService) Access(ctx context.Context, role int, url string) error {
 		return ErrPermissionDenied
 	}
 	return nil
+
+}
+
+func (s *authService) Me(ctx context.Context, tokenHeader string) (*userEntity.User, error) {
+	accessToken := strings.TrimPrefix(tokenHeader, "Bearer ")
+
+	token, _ := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, ErrTokenInvalidOrExpired
+		}
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+
+	claims, _ := token.Claims.(jwt.MapClaims)
+	userId, _ := claims["user_id"].(string)
+
+	req := &pb.GetUserByIdRequest{Id: userId}
+	user, err := s.client.GetUserById(ctx, req)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return nil, ErrUserNotFound
+			case codes.InvalidArgument:
+				return nil, ErrInvalidCredentials
+			case codes.Internal:
+				return nil, ErrInternalServer
+			}
+		}
+	}
+
+	entityUser := &userEntity.User{
+		ID:        user.Id,
+		Username:  user.Username,
+		Email:     user.Email,
+		Role:      int(user.Role),
+		Rating:    int(user.Rating),
+		CreatedAt: user.CreatedAt.AsTime(),
+		UpdatedAt: user.UpdatedAt.AsTime(),
+		IsActive:  user.IsActive,
+	}
+
+	return entityUser, nil
 
 }

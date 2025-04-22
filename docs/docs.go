@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.AccessRequest"
+                            "$ref": "#/definitions/docs.AccessRequest"
                         }
                     }
                 ],
@@ -43,19 +43,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Доступ разрешён",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
                         }
                     },
                     "400": {
                         "description": "Недействительные данные",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Недействительный или отсутствующий токен",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     }
                 }
@@ -63,6 +63,11 @@ const docTemplate = `{
         },
         "/auth/check": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Проверяет валидность переданного access-токена",
                 "produces": [
                     "application/json"
@@ -71,26 +76,17 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Проверка токена",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Токен действителен",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
                         }
                     },
                     "401": {
                         "description": "Токен недействителен или отсутствует",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     }
                 }
@@ -116,7 +112,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ForgotPasswordRequest"
+                            "$ref": "#/definitions/docs.ForgotPasswordRequest"
                         }
                     }
                 ],
@@ -124,25 +120,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Ссылка для восстановления отправлена",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
                         }
                     },
                     "400": {
                         "description": "Некорректный запрос",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Пользователь не найден",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     }
                 }
@@ -168,7 +164,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.LoginRequest"
+                            "$ref": "#/definitions/docs.LoginRequest"
                         }
                     }
                 ],
@@ -176,32 +172,49 @@ const docTemplate = `{
                     "200": {
                         "description": "Успешная авторизация",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/docs.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/docs.Token"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Неверные учётные данные",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Пользователь заблокирован",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     }
                 }
             }
         },
         "/auth/logout": {
-            "post": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Завершает сессию пользователя",
                 "produces": [
                     "application/json"
@@ -210,26 +223,78 @@ const docTemplate = `{
                     "Auth"
                 ],
                 "summary": "Выход пользователя",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Bearer token",
-                        "name": "Authorization",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Сессия завершена",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
                         }
                     },
                     "401": {
                         "description": "Неавторизованный доступ",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Возвращает информацию о пользователе, если токен действителен",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Получение информации о пользователе по access-токену",
+                "responses": {
+                    "200": {
+                        "description": "Информация о пользователе",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/docs.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/docs.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный UUID пользователя",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Недействительный или отсутствующий токен",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     }
                 }
@@ -255,7 +320,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.RefreshRequest"
+                            "$ref": "#/definitions/docs.RefreshRequest"
                         }
                     }
                 ],
@@ -263,25 +328,37 @@ const docTemplate = `{
                     "200": {
                         "description": "Новый токен получен",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/docs.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/docs.AccessToken"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Некорректный запрос",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Недействительный или истекший refresh-токен",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     }
                 }
@@ -307,7 +384,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ResetPasswordRequest"
+                            "$ref": "#/definitions/docs.ResetPasswordRequest"
                         }
                     }
                 ],
@@ -315,13 +392,13 @@ const docTemplate = `{
                     "200": {
                         "description": "Пароль изменён",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse"
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
                         }
                     },
                     "400": {
                         "description": "Токен недействителен или истек",
                         "schema": {
-                            "$ref": "#/definitions/gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse"
+                            "$ref": "#/definitions/docs.ErrorResponse"
                         }
                     }
                 }
@@ -329,7 +406,32 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.ErrorResponse": {
+        "docs.AccessRequest": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.AccessToken": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.ErrorResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -340,7 +442,45 @@ const docTemplate = `{
                 }
             }
         },
-        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_infrastructure_response.SuccessResponse": {
+        "docs.ForgotPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.RefreshRequest": {
+            "type": "object",
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.ResetPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.SuccessResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -352,66 +492,84 @@ const docTemplate = `{
                 }
             }
         },
-        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.AccessRequest": {
+        "docs.SuccessResponseWithoutData": {
             "type": "object",
             "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.Token": {
+            "type": "object",
+            "properties": {
+                "access_expires_in": {
+                    "type": "integer"
+                },
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_expires_in": {
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "docs.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "rating": {
+                    "type": "integer"
+                },
                 "role": {
                     "type": "integer"
                 },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ForgotPasswordRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                }
-            }
-        },
-        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.LoginRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
+                "updated_at": {
                     "type": "string"
                 },
-                "password": {
+                "username": {
                     "type": "string"
                 }
             }
-        },
-        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.RefreshRequest": {
-            "type": "object",
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "gitlab_mai_ru_cicada-chess_backend_auth-service_internal_presentation_http_ginapp_dto.ResetPasswordRequest": {
-            "type": "object",
-            "properties": {
-                "new_password": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "217.114.11.158:8081",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Auth API",
+	Description:      "API для аутентификации пользователей",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
