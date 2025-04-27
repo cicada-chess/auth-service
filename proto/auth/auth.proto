@@ -1,0 +1,17 @@
+syntax="proto3";
+
+package auth;
+
+option go_package = "gitlab.mai.ru/cicada-chess/backend/auth-service/proto/auth";
+
+service AuthService {
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
+}
+
+message ValidateTokenRequest {
+    string token = 1;
+}
+
+message ValidateTokenResponse {
+    bool is_valid = 1;
+}
