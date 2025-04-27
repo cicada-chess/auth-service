@@ -18,7 +18,6 @@ variables:
     - chown -R gitlab-runner:gitlab-runner /home/gitlab-runner/backend
     - chmod 755 /home/gitlab-runner/backend
     - docker-compose -f ${DOCKER_COMPOSE_FILE} up -d db
-    - docker-compose -f ${DOCKER_COMPOSE_FILE} up -d user-service
   script:
     - if [ ! -d "${SERVICE_DIR}" ]; then
         echo "Cloning new repository";
