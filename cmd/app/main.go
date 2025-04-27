@@ -28,7 +28,7 @@ import (
 // @version 1.0
 // @description API для аутентификации пользователей
 
-// @host 217.114.11.158:8081
+// @host localhost:8081
 // @BasePath /
 
 // @securityDefinitions.apikey BearerAuth
