@@ -2,39 +2,22 @@ stages:
   - deploy
 
 variables:
-  BASE_DIR: "/home/gitlab-runner/backend"
-  DOCKER_COMPOSE_FILE: "${BASE_DIR}/docker-compose.yml"
-  ENV_FILE: "${BASE_DIR}/.env"
+  PROJECT_DIR: "/home/gitlab-runner/backend"
+  SERVICE_NAME: "auth-service"
+  BRANCH_NAME: "develop"
 
-.deploy_template: &deploy_template
+deploy_auth_service:
   stage: deploy
-  only:
-    - develop
   tags:
     - auth-runner
-  before_script:
-    - mkdir -p ${BASE_DIR}
-    - cd ${BASE_DIR}
-    - chown -R gitlab-runner:gitlab-runner /home/gitlab-runner/backend
-    - chmod 755 /home/gitlab-runner/backend
-    - docker-compose -f ${DOCKER_COMPOSE_FILE} up -d db
   script:
-    - if [ ! -d "${SERVICE_DIR}" ]; then
-        echo "Cloning new repository";
-        git clone ${GIT_URL} ${SERVICE_DIR} --branch develop;
-      else
-        echo "Updating existing repository";
-        cd ${SERVICE_DIR};
-        git checkout develop;
-        git reset --hard HEAD;
-        git pull origin develop;
-      fi
-    - docker-compose -f ${DOCKER_COMPOSE_FILE} --env-file ${ENV_FILE} up -d --build ${SERVICE_NAME}
+    - cd ${PROJECT_DIR}/${SERVICE_NAME}
+    - git fetch origin ${BRANCH_NAME}
+    - git reset --hard origin/${BRANCH_NAME}
 
-# User Service
-deploy_auth_service:
-  <<: *deploy_template
-  variables:
-    SERVICE_NAME: "auth-service"
-    SERVICE_DIR: "${BASE_DIR}/auth-service"
-    GIT_URL: "https://gitlab.mai.ru/cicada-chess/backend/auth-service.git"
+    - cd ${PROJECT_DIR}
+    - docker-compose build ${SERVICE_NAME}
+    - docker-compose up -d ${SERVICE_NAME}
+
+  only:
+    - develop
