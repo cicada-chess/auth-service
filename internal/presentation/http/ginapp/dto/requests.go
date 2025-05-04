@@ -26,3 +26,9 @@ type AccessRequest struct {
 type MeRequest struct {
 	Id int `json:"id"`
 }
+
+type RegisterRequest struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}

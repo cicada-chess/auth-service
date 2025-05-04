@@ -27,6 +27,7 @@ var (
 	ErrUrlNotFound           = errors.New("url not found")
 	ErrPermissionDenied      = errors.New("permission denied")
 	ErrInternalServer        = errors.New("internal server error")
+	ErrAlreadyExists         = errors.New("user already exists")
 )
 
 type authService struct {
@@ -41,6 +42,29 @@ func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.Acc
 		accessRepo:  accessRepo,
 		emailSender: emailSender, // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
 	}
+}
+
+func (s *authService) Register(ctx context.Context, email, username, password string) (*string, error) {
+	req := &pb.RegisterUserRequest{
+		Email:    email,
+		Username: username,
+		Password: password,
+		IsActive: false,
+	}
+	pbId, err := s.client.RegisterUser(ctx, req)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.AlreadyExists:
+				return nil, ErrAlreadyExists
+			case codes.InvalidArgument:
+				return nil, ErrInvalidCredentials
+			}
+		}
+	}
+
+	return &pbId.Id, nil
 }
 
 func (s *authService) Login(ctx context.Context, email string, password string) (*auth.Token, error) {

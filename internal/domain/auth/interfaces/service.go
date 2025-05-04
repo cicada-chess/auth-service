@@ -8,6 +8,7 @@ import (
 )
 
 type AuthService interface {
+	Register(ctx context.Context, email string, username string, password string) (*string, error)
 	Login(ctx context.Context, email string, password string) (*entity.Token, error)
 	Check(ctx context.Context, tokenHeader string) error
 	Refresh(ctx context.Context, refreshToken string) (*entity.Token, error)

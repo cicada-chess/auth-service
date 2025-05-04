@@ -25,6 +25,41 @@ func NewAuthHandler(service interfaces.AuthService, logger *logrus.Logger) *Auth
 	}
 }
 
+// Register godoc
+// @Summary Регистрация пользователя
+// @Description Регистрирует нового пользователя
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body docs.RegisterRequest true "Данные для регистрации"
+// @Success 200 {object} docs.SuccessResponse{data=string} "Пользователь успешно зарегистрирован"
+// @Failure 400 {object} docs.ErrorResponse "Некорректный запрос"
+// @Failure 409 {object} docs.ErrorResponse "Пользователь уже существует"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка сервера"
+// @Router /auth/register [post]
+func (h *AuthHandler) Register(c *gin.Context) {
+	var request dto.RegisterRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		h.logger.Errorf("Error binding request: %v", err)
+		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := h.service.Register(c.Request.Context(), request.Email, request.Username, request.Password)
+	if err != nil {
+		h.logger.Errorf("Error registering user: %v", err)
+		switch {
+		case errors.Is(err, application.ErrAlreadyExists):
+			response.NewErrorResponse(c, http.StatusConflict, err.Error())
+			return
+		case errors.Is(err, application.ErrInvalidCredentials):
+			response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		}
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Пользователь успешно зарегистрирован", id)
+}
+
 // Login godoc
 // @Summary Вход пользователя
 // @Description Аутентифицирует пользователя и выдаёт JWT-токены

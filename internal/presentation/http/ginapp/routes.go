@@ -22,6 +22,7 @@ func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Lo
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := r.Group("/auth")
 	{
+		api.POST("/register", handler.Register)
 		api.POST("/login", handler.Login)
 		api.GET("/logout", handler.Logout)
 		api.POST("/refresh", handler.Refresh)

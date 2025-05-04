@@ -76,6 +76,26 @@ func (mr *MockUserServiceClientMockRecorder) GetUserById(ctx, in interface{}, op
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockUserServiceClient)(nil).GetUserById), varargs...)
 }
 
+// RegisterUser mocks base method.
+func (m *MockUserServiceClient) RegisterUser(ctx context.Context, in *user.RegisterUserRequest, opts ...grpc.CallOption) (*user.RegisterUserResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RegisterUser", varargs...)
+	ret0, _ := ret[0].(*user.RegisterUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterUser indicates an expected call of RegisterUser.
+func (mr *MockUserServiceClientMockRecorder) RegisterUser(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockUserServiceClient)(nil).RegisterUser), varargs...)
+}
+
 // UpdateUserPassword mocks base method.
 func (m *MockUserServiceClient) UpdateUserPassword(ctx context.Context, in *user.UpdateUserPasswordRequest, opts ...grpc.CallOption) (*user.UpdateUserPasswordResponse, error) {
 	m.ctrl.T.Helper()
@@ -147,6 +167,21 @@ func (m *MockUserServiceServer) GetUserById(arg0 context.Context, arg1 *user.Get
 func (mr *MockUserServiceServerMockRecorder) GetUserById(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockUserServiceServer)(nil).GetUserById), arg0, arg1)
+}
+
+// RegisterUser mocks base method.
+func (m *MockUserServiceServer) RegisterUser(arg0 context.Context, arg1 *user.RegisterUserRequest) (*user.RegisterUserResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterUser", arg0, arg1)
+	ret0, _ := ret[0].(*user.RegisterUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterUser indicates an expected call of RegisterUser.
+func (mr *MockUserServiceServerMockRecorder) RegisterUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockUserServiceServer)(nil).RegisterUser), arg0, arg1)
 }
 
 // UpdateUserPassword mocks base method.
