@@ -30,8 +30,8 @@ func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Lo
 		api.POST("/forgot-password", handler.ForgotPassword)
 		api.POST("/reset-password", handler.ResetPassword)
 		api.POST("/confirm-account", handler.ConfirmAccount)
+		api.GET("/confirm-account", handler.ConfirmAccount)
 		api.POST("/access", handler.Access)
 		api.GET("/me", handler.Me)
-
 	}
 }
