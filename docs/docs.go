@@ -92,6 +92,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/confirm-account": {
+            "post": {
+                "description": "Активирует аккаунт пользователя по токену",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Подтверждение аккаунта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Токен подтверждения",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Аккаунт успешно активирован",
+                        "schema": {
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный токен",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/forgot-password": {
             "post": {
                 "description": "Отправляет ссылку для восстановления доступа",
@@ -643,7 +690,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "217.114.11.158:8081",
+	Host:             "cicada-chess.ru:8081",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Auth API",

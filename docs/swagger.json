@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "217.114.11.158:8081",
+    "host": "cicada-chess.ru:8081",
     "basePath": "/",
     "paths": {
         "/auth/access": {
@@ -79,6 +79,53 @@
                     },
                     "401": {
                         "description": "Токен недействителен или отсутствует",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/confirm-account": {
+            "post": {
+                "description": "Активирует аккаунт пользователя по токену",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Подтверждение аккаунта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Токен подтверждения",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Аккаунт успешно активирован",
+                        "schema": {
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный токен",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
                         "schema": {
                             "$ref": "#/definitions/docs.ErrorResponse"
                         }

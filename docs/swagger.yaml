@@ -103,7 +103,7 @@ definitions:
       username:
         type: string
     type: object
-host: 217.114.11.158:8081
+host: cicada-chess.ru:8081
 info:
   contact: {}
   description: API для аутентификации пользователей
@@ -157,6 +157,37 @@ paths:
       security:
       - BearerAuth: []
       summary: Проверка токена
+      tags:
+      - Auth
+  /auth/confirm-account:
+    post:
+      description: Активирует аккаунт пользователя по токену
+      parameters:
+      - description: Токен подтверждения
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Аккаунт успешно активирован
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "400":
+          description: Неверный токен
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Подтверждение аккаунта
       tags:
       - Auth
   /auth/forgot-password:

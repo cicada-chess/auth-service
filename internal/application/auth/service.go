@@ -309,3 +309,30 @@ func (s *authService) Me(ctx context.Context, tokenHeader string) (*userEntity.U
 	return entityUser, nil
 
 }
+
+func (s *authService) ConfirmAccount(ctx context.Context, token string) error {
+	id, err := auth.ValidateToken(token, auth.AccountConfirmation)
+	if err != nil {
+		return err
+	}
+
+	req := &pb.ConfirmAccountRequest{Id: *id}
+
+	response, err := s.client.ConfirmAccount(ctx, req)
+	if err != nil && response == nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return ErrUserNotFound
+			case codes.InvalidArgument:
+				return ErrInvalidCredentials
+			case codes.Internal:
+				return ErrInternalServer
+			}
+		}
+	}
+
+	return nil
+
+}

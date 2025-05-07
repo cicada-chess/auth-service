@@ -390,3 +390,41 @@ func (h *AuthHandler) Me(c *gin.Context) {
 
 	response.NewSuccessResponse(c, http.StatusOK, "Информация о пользователе", dtoUser)
 }
+
+// ConfirmAccount godoc
+// @Summary Подтверждение аккаунта
+// @Description Активирует аккаунт пользователя по токену
+// @Tags Auth
+// @Produce json
+// @Param token query string true "Токен подтверждения"
+// @Success 200 {object} docs.SuccessResponseWithoutData "Аккаунт успешно активирован"
+// @Failure 400 {object} docs.ErrorResponse "Неверный токен"
+// @Failure 404 {object} docs.ErrorResponse "Пользователь не найден"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка"
+// @Router /auth/confirm-account [post]
+func (h *AuthHandler) ConfirmAccount(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		response.NewErrorResponse(c, http.StatusBadRequest, "Нет токена")
+		return
+	}
+	err := h.service.ConfirmAccount(c.Request.Context(), token)
+	if err != nil {
+		h.logger.Errorf("Error confirming account: %v", err)
+		switch {
+		case errors.Is(err, application.ErrUserNotFound):
+			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
+			return
+		case errors.Is(err, application.ErrTokenInvalidOrExpired):
+			response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
+			return
+		case errors.Is(err, application.ErrInvalidCredentials):
+			response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
+		default:
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Аккаунт успешно активирован", nil)
+}

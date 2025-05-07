@@ -16,4 +16,5 @@ type AuthService interface {
 	ResetPassword(ctx context.Context, resetToken string, newPassword string) error
 	Access(ctx context.Context, role int, url string) error
 	Me(ctx context.Context, tokenHeader string) (*userEntity.User, error)
+	ConfirmAccount(ctx context.Context, token string) error
 }
