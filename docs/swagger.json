@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "cicada-chess.ru:8081",
+    "host": "localhost:8081",
     "basePath": "/",
     "paths": {
         "/auth/access": {
@@ -484,6 +484,13 @@
                 "summary": "Сброс пароля",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Токен для сброса пароля",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
                         "description": "Новый пароль",
                         "name": "request",
                         "in": "body",
@@ -592,9 +599,6 @@
             "type": "object",
             "properties": {
                 "new_password": {
-                    "type": "string"
-                },
-                "token": {
                     "type": "string"
                 }
             }

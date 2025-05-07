@@ -490,6 +490,13 @@ const docTemplate = `{
                 "summary": "Сброс пароля",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Токен для сброса пароля",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
                         "description": "Новый пароль",
                         "name": "request",
                         "in": "body",
@@ -599,9 +606,6 @@ const docTemplate = `{
             "properties": {
                 "new_password": {
                     "type": "string"
-                },
-                "token": {
-                    "type": "string"
                 }
             }
         },
@@ -690,7 +694,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "cicada-chess.ru:8081",
+	Host:             "localhost:8081",
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Auth API",

@@ -56,6 +56,26 @@ func (mr *MockUserServiceClientMockRecorder) ConfirmAccount(ctx, in interface{},
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfirmAccount", reflect.TypeOf((*MockUserServiceClient)(nil).ConfirmAccount), varargs...)
 }
 
+// ForgotPassword mocks base method.
+func (m *MockUserServiceClient) ForgotPassword(ctx context.Context, in *user.ForgotPasswordRequest, opts ...grpc.CallOption) (*user.ForgotPasswordResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ForgotPassword", varargs...)
+	ret0, _ := ret[0].(*user.ForgotPasswordResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ForgotPassword indicates an expected call of ForgotPassword.
+func (mr *MockUserServiceClientMockRecorder) ForgotPassword(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForgotPassword", reflect.TypeOf((*MockUserServiceClient)(nil).ForgotPassword), varargs...)
+}
+
 // GetUserByEmail mocks base method.
 func (m *MockUserServiceClient) GetUserByEmail(ctx context.Context, in *user.GetUserByEmailRequest, opts ...grpc.CallOption) (*user.GetUserByEmailResponse, error) {
 	m.ctrl.T.Helper()
@@ -172,6 +192,21 @@ func (m *MockUserServiceServer) ConfirmAccount(arg0 context.Context, arg1 *user.
 func (mr *MockUserServiceServerMockRecorder) ConfirmAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfirmAccount", reflect.TypeOf((*MockUserServiceServer)(nil).ConfirmAccount), arg0, arg1)
+}
+
+// ForgotPassword mocks base method.
+func (m *MockUserServiceServer) ForgotPassword(arg0 context.Context, arg1 *user.ForgotPasswordRequest) (*user.ForgotPasswordResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ForgotPassword", arg0, arg1)
+	ret0, _ := ret[0].(*user.ForgotPasswordResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ForgotPassword indicates an expected call of ForgotPassword.
+func (mr *MockUserServiceServerMockRecorder) ForgotPassword(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForgotPassword", reflect.TypeOf((*MockUserServiceServer)(nil).ForgotPassword), arg0, arg1)
 }
 
 // GetUserByEmail mocks base method.

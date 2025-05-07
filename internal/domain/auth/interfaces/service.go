@@ -13,7 +13,7 @@ type AuthService interface {
 	Check(ctx context.Context, tokenHeader string) error
 	Refresh(ctx context.Context, refreshToken string) (*entity.Token, error)
 	ForgotPassword(ctx context.Context, email string) error
-	ResetPassword(ctx context.Context, resetToken string, newPassword string) error
+	ResetPassword(ctx context.Context, token, newPassword string) error
 	Access(ctx context.Context, role int, url string) error
 	Me(ctx context.Context, tokenHeader string) (*userEntity.User, error)
 	ConfirmAccount(ctx context.Context, token string) error

@@ -237,13 +237,16 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		case errors.Is(err, application.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь с указанным email не найден")
 			return
+		case errors.Is(err, application.ErrInvalidCredentials):
+			response.NewErrorResponse(c, http.StatusBadRequest, "Неверный формат UUID")
+			return
 		default:
 			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	response.NewSuccessResponse(c, http.StatusOK, "Ссылка для восстановления отправлена", nil)
+	response.NewSuccessResponse(c, http.StatusOK, "Ссылка для восстановления пароля отправлена", nil)
 
 }
 
@@ -253,11 +256,17 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
+// @Param token query string true "Токен для сброса пароля"
 // @Param request body docs.ResetPasswordRequest true "Новый пароль"
 // @Success 200 {object} docs.SuccessResponseWithoutData "Пароль изменён"
 // @Failure 400 {object} docs.ErrorResponse "Токен недействителен или истек"
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		response.NewErrorResponse(c, http.StatusBadRequest, "Нет токена")
+		return
+	}
 	var request dto.ResetPasswordRequest
 	if err := c.BindJSON(&request); err != nil {
 		h.logger.Errorf("Error binding request: %v", err)
@@ -265,7 +274,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	err := h.service.ResetPassword(c.Request.Context(), request.Token, request.NewPassword)
+	err := h.service.ResetPassword(c.Request.Context(), token, request.NewPassword)
 
 	if err != nil {
 		h.logger.Errorf("Error resetting password: %v", err)
@@ -371,6 +380,8 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		case errors.Is(err, application.ErrInvalidCredentials):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Неверный UUID пользователя")
 			return
+		case errors.Is(err, application.ErrTokenInvalidOrExpired):
+			response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
 		default:
 			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return

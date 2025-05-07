@@ -123,6 +123,8 @@ gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250504114902-7f2b58513a
 gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250504114902-7f2b58513a1f/go.mod h1:zp/eHDNQS1kCoYHo8dQVdwg68AYTGmbmmC+sHx1BIyU=
 gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250507145307-ef91b3f009f9 h1:fegLjBV6cLuJXCBM1/nrprk7wscOJWKPlIkBPwNNQwo=
 gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250507145307-ef91b3f009f9/go.mod h1:2wkO6rEng1KWNIDnGGiOInJx5M2s7hokTuW/BWhx6kI=
+gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250507164731-1d518eda7f6b h1:U9pT8gYneh4yNglx5V8mGqUSsRP7fUX/bpdzkWSShHw=
+gitlab.mai.ru/cicada-chess/backend/user-service v0.0.0-20250507164731-1d518eda7f6b/go.mod h1:2wkO6rEng1KWNIDnGGiOInJx5M2s7hokTuW/BWhx6kI=
 go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJySYA=
 go.opentelemetry.io/auto/sdk v1.1.0/go.mod h1:3wSPjt5PWp2RhlCcmmOial7AvC4DQqZb7a7wCow3W8A=
 go.opentelemetry.io/otel v1.34.0 h1:zRLXxLCgL1WyKsPVrgbSdMN4c0FMkDAskSTQP+0hdUY=

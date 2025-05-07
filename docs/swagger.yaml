@@ -53,8 +53,6 @@ definitions:
     properties:
       new_password:
         type: string
-      token:
-        type: string
     type: object
   docs.SuccessResponse:
     properties:
@@ -103,7 +101,7 @@ definitions:
       username:
         type: string
     type: object
-host: cicada-chess.ru:8081
+host: localhost:8081
 info:
   contact: {}
   description: API для аутентификации пользователей
@@ -402,6 +400,11 @@ paths:
       - application/json
       description: Сбрасывает пароль по ссылке для восстановления
       parameters:
+      - description: Токен для сброса пароля
+        in: query
+        name: token
+        required: true
+        type: string
       - description: Новый пароль
         in: body
         name: request

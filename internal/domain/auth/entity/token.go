@@ -20,6 +20,8 @@ type TokenType string
 const (
 	AccountConfirmation TokenType = "account_confirmation"
 	PasswordReset       TokenType = "password_reset"
+	AccessToken         TokenType = "access"
+	RefreshToken        TokenType = "refresh"
 )
 
 var ErrTokenInvalidOrExpired = errors.New("token invalid or expired")
@@ -36,7 +38,7 @@ func GenerateAccessToken(userId string, Role int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    userId,
 		"role":       Role,
-		"token_type": "access",
+		"token_type": string(AccessToken),
 		"expires_at": time.Now().Add(AccessTokenTTL).Unix(),
 	})
 
@@ -47,19 +49,28 @@ func GenerateRefreshToken(userId string, Role int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    userId,
 		"role":       Role,
-		"token_type": "refresh",
+		"token_type": string(RefreshToken),
 		"expires_at": time.Now().Add(RefreshTokenTTL).Unix(),
 	})
 
 	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 }
 
-func GenerateResetToken(userId string, Role int) (string, error) {
+func GeneratePasswordResetToken(userId string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    userId,
-		"role":       Role,
-		"token_type": "reset",
+		"token_type": string(PasswordReset),
 		"expires_at": time.Now().Add(ResetPasswordTokenTTL).Unix(),
+	})
+
+	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+}
+
+func GenerateAccountConfirmationToken(userId string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":    userId,
+		"token_type": string(AccountConfirmation),
+		"expires_at": time.Now().Add(AccountConfirmationTTL).Unix(),
 	})
 
 	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
@@ -112,7 +123,7 @@ func ValidateToken(tokenString string, tokenType TokenType) (*string, error) {
 		return nil, ErrTokenInvalidOrExpired
 	}
 
-	userId, ok := claims["userId"].(string)
+	userId, ok := claims["user_id"].(string)
 	if !ok {
 		return nil, ErrTokenInvalidOrExpired
 	}
