@@ -17,7 +17,7 @@ func TestAuthService_ResetPassword_InvalidToken(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
-	svc := auth.NewAuthService(mockUserService, nil, nil)
+	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
 
 	err := svc.ResetPassword(ctx, "invalid_token", "new_password")
@@ -29,14 +29,14 @@ func TestAuthService_ResetPassword_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
-	svc := auth.NewAuthService(mockUserService, nil, nil)
+	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
 
-	resetToken, err := authEntity.GenerateResetToken("1", 1)
+	token, err := authEntity.GeneratePasswordResetToken("1")
 	assert.NoError(t, err)
 	request := &pb.UpdateUserPasswordRequest{Id: "1", Password: "new_password"}
 	response := &pb.UpdateUserPasswordResponse{Status: "success"}
 	mockUserService.EXPECT().UpdateUserPassword(ctx, request).Return(response, nil)
-	err = svc.ResetPassword(ctx, resetToken, "new_password")
+	err = svc.ResetPassword(ctx, token, "new_password")
 	assert.NoError(t, err)
 }

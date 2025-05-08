@@ -5,10 +5,8 @@ import (
 	"errors"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	senderInterface "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/sender"
 	accessEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/entity"
 	accessInterfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/interfaces"
 	auth "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
@@ -27,20 +25,42 @@ var (
 	ErrUrlNotFound           = errors.New("url not found")
 	ErrPermissionDenied      = errors.New("permission denied")
 	ErrInternalServer        = errors.New("internal server error")
+	ErrAlreadyExists         = errors.New("user already exists")
 )
 
 type authService struct {
-	client      pb.UserServiceClient
-	accessRepo  accessInterfaces.AccessRepository
-	emailSender senderInterface.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
+	client     pb.UserServiceClient
+	accessRepo accessInterfaces.AccessRepository
 }
 
-func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.AccessRepository, emailSender senderInterface.EmailSender) authInterfaces.AuthService {
+func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
 	return &authService{
-		client:      client,
-		accessRepo:  accessRepo,
-		emailSender: emailSender, // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
+		client:     client,
+		accessRepo: accessRepo,
 	}
+}
+
+func (s *authService) Register(ctx context.Context, email, username, password string) (*string, error) {
+	req := &pb.RegisterUserRequest{
+		Email:    email,
+		Username: username,
+		Password: password,
+		IsActive: false,
+	}
+	pbId, err := s.client.RegisterUser(ctx, req)
+	if err != nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.AlreadyExists:
+				return nil, ErrAlreadyExists
+			case codes.InvalidArgument:
+				return nil, ErrInvalidCredentials
+			}
+		}
+	}
+
+	return &pbId.Id, nil
 }
 
 func (s *authService) Login(ctx context.Context, email string, password string) (*auth.Token, error) {
@@ -89,61 +109,22 @@ func (s *authService) Check(ctx context.Context, tokenHeader string) error {
 		return ErrTokenInvalidOrExpired
 	}
 
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrTokenInvalidOrExpired
-		}
-		return []byte(os.Getenv("SECRET_KEY")), nil
-	})
-	if err != nil || !token.Valid {
-		return ErrTokenInvalidOrExpired
+	_, err := auth.ValidateToken(accessToken, auth.AccessToken)
+	if err != nil {
+		return err
 	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-
-	if !ok {
-		return ErrTokenInvalidOrExpired
-	}
-
-	expires_at, ok := claims["expires_at"].(float64)
-	if !ok || expires_at < float64(time.Now().Unix()) {
-		return ErrTokenInvalidOrExpired
-	}
-
-	token_type, ok := claims["token_type"].(string)
-	if !ok || token_type != "access" {
-		return ErrTokenInvalidOrExpired
-	}
-
 	return nil
 }
 
 func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.Token, error) {
-	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrTokenInvalidOrExpired
-		}
+	_, err := auth.ValidateToken(refreshToken, auth.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+	token, _ := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
-
-	if err != nil || !token.Valid {
-		return nil, ErrTokenInvalidOrExpired
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, ErrTokenInvalidOrExpired
-	}
-
-	expires_at, ok := claims["expires_at"].(float64)
-	if !ok || expires_at < float64(time.Now().Unix()) {
-		return nil, ErrTokenInvalidOrExpired
-	}
-
-	token_type, ok := claims["token_type"].(string)
-	if !ok || token_type != "refresh" {
-		return nil, ErrTokenInvalidOrExpired
-	}
+	claims, _ := token.Claims.(jwt.MapClaims)
 
 	accessToken, err := auth.GenerateAccessToken(claims["user_id"].(string), int(claims["role"].(float64)))
 
@@ -159,59 +140,32 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 }
 
 func (s *authService) ForgotPassword(ctx context.Context, email string) error {
-	req := &pb.GetUserByEmailRequest{Email: email}
-	user, err := s.client.GetUserByEmail(ctx, req)
-	if err != nil {
+	req := &pb.ForgotPasswordRequest{Email: email}
+	response, err := s.client.ForgotPassword(ctx, req)
+	if err != nil && response == nil {
 		st, ok := status.FromError(err)
 		if ok {
 			switch st.Code() {
 			case codes.NotFound:
 				return ErrUserNotFound
+			case codes.InvalidArgument:
+				return ErrInvalidCredentials
 			default:
 				return ErrInternalServer
 			}
 		}
 	}
 
-	resetToken, err := auth.GenerateResetToken(user.Id, int(user.Role))
+	return nil
+}
+
+func (s *authService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	userId, err := auth.ValidateToken(token, auth.PasswordReset)
 	if err != nil {
 		return err
 	}
 
-	if err := s.emailSender.SendResetPasswordEmail(email, resetToken); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *authService) ResetPassword(ctx context.Context, resetToken string, newPassword string) error {
-	token, err := jwt.Parse(resetToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrTokenInvalidOrExpired
-		}
-		return []byte(os.Getenv("SECRET_KEY")), nil
-	})
-
-	if err != nil || !token.Valid {
-		return ErrTokenInvalidOrExpired
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return ErrTokenInvalidOrExpired
-	}
-
-	userID, ok := claims["user_id"].(string)
-	if !ok {
-		return ErrTokenInvalidOrExpired
-	}
-
-	token_type, ok := claims["token_type"].(string)
-	if !ok || token_type != "reset" {
-		return ErrTokenInvalidOrExpired
-	}
-
-	req := &pb.UpdateUserPasswordRequest{Id: userID, Password: newPassword}
+	req := &pb.UpdateUserPasswordRequest{Id: *userId, Password: newPassword}
 	response, err := s.client.UpdateUserPassword(ctx, req)
 	if err != nil && response == nil {
 		st, ok := status.FromError(err)
@@ -246,9 +200,6 @@ func (s *authService) Me(ctx context.Context, tokenHeader string) (*userEntity.U
 	accessToken := strings.TrimPrefix(tokenHeader, "Bearer ")
 
 	token, _ := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrTokenInvalidOrExpired
-		}
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 
@@ -283,5 +234,32 @@ func (s *authService) Me(ctx context.Context, tokenHeader string) (*userEntity.U
 	}
 
 	return entityUser, nil
+
+}
+
+func (s *authService) ConfirmAccount(ctx context.Context, token string) error {
+	id, err := auth.ValidateToken(token, auth.AccountConfirmation)
+	if err != nil {
+		return err
+	}
+
+	req := &pb.ConfirmAccountRequest{Id: *id}
+
+	response, err := s.client.ConfirmAccount(ctx, req)
+	if err != nil && response == nil {
+		st, ok := status.FromError(err)
+		if ok {
+			switch st.Code() {
+			case codes.NotFound:
+				return ErrUserNotFound
+			case codes.InvalidArgument:
+				return ErrInvalidCredentials
+			case codes.Internal:
+				return ErrInternalServer
+			}
+		}
+	}
+
+	return nil
 
 }

@@ -36,6 +36,46 @@ func (m *MockUserServiceClient) EXPECT() *MockUserServiceClientMockRecorder {
 	return m.recorder
 }
 
+// ConfirmAccount mocks base method.
+func (m *MockUserServiceClient) ConfirmAccount(ctx context.Context, in *user.ConfirmAccountRequest, opts ...grpc.CallOption) (*user.ConfirmAccountResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ConfirmAccount", varargs...)
+	ret0, _ := ret[0].(*user.ConfirmAccountResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConfirmAccount indicates an expected call of ConfirmAccount.
+func (mr *MockUserServiceClientMockRecorder) ConfirmAccount(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfirmAccount", reflect.TypeOf((*MockUserServiceClient)(nil).ConfirmAccount), varargs...)
+}
+
+// ForgotPassword mocks base method.
+func (m *MockUserServiceClient) ForgotPassword(ctx context.Context, in *user.ForgotPasswordRequest, opts ...grpc.CallOption) (*user.ForgotPasswordResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ForgotPassword", varargs...)
+	ret0, _ := ret[0].(*user.ForgotPasswordResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ForgotPassword indicates an expected call of ForgotPassword.
+func (mr *MockUserServiceClientMockRecorder) ForgotPassword(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForgotPassword", reflect.TypeOf((*MockUserServiceClient)(nil).ForgotPassword), varargs...)
+}
+
 // GetUserByEmail mocks base method.
 func (m *MockUserServiceClient) GetUserByEmail(ctx context.Context, in *user.GetUserByEmailRequest, opts ...grpc.CallOption) (*user.GetUserByEmailResponse, error) {
 	m.ctrl.T.Helper()
@@ -74,6 +114,26 @@ func (mr *MockUserServiceClientMockRecorder) GetUserById(ctx, in interface{}, op
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockUserServiceClient)(nil).GetUserById), varargs...)
+}
+
+// RegisterUser mocks base method.
+func (m *MockUserServiceClient) RegisterUser(ctx context.Context, in *user.RegisterUserRequest, opts ...grpc.CallOption) (*user.RegisterUserResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RegisterUser", varargs...)
+	ret0, _ := ret[0].(*user.RegisterUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterUser indicates an expected call of RegisterUser.
+func (mr *MockUserServiceClientMockRecorder) RegisterUser(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockUserServiceClient)(nil).RegisterUser), varargs...)
 }
 
 // UpdateUserPassword mocks base method.
@@ -119,6 +179,36 @@ func (m *MockUserServiceServer) EXPECT() *MockUserServiceServerMockRecorder {
 	return m.recorder
 }
 
+// ConfirmAccount mocks base method.
+func (m *MockUserServiceServer) ConfirmAccount(arg0 context.Context, arg1 *user.ConfirmAccountRequest) (*user.ConfirmAccountResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ConfirmAccount", arg0, arg1)
+	ret0, _ := ret[0].(*user.ConfirmAccountResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ConfirmAccount indicates an expected call of ConfirmAccount.
+func (mr *MockUserServiceServerMockRecorder) ConfirmAccount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConfirmAccount", reflect.TypeOf((*MockUserServiceServer)(nil).ConfirmAccount), arg0, arg1)
+}
+
+// ForgotPassword mocks base method.
+func (m *MockUserServiceServer) ForgotPassword(arg0 context.Context, arg1 *user.ForgotPasswordRequest) (*user.ForgotPasswordResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ForgotPassword", arg0, arg1)
+	ret0, _ := ret[0].(*user.ForgotPasswordResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ForgotPassword indicates an expected call of ForgotPassword.
+func (mr *MockUserServiceServerMockRecorder) ForgotPassword(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForgotPassword", reflect.TypeOf((*MockUserServiceServer)(nil).ForgotPassword), arg0, arg1)
+}
+
 // GetUserByEmail mocks base method.
 func (m *MockUserServiceServer) GetUserByEmail(arg0 context.Context, arg1 *user.GetUserByEmailRequest) (*user.GetUserByEmailResponse, error) {
 	m.ctrl.T.Helper()
@@ -147,6 +237,21 @@ func (m *MockUserServiceServer) GetUserById(arg0 context.Context, arg1 *user.Get
 func (mr *MockUserServiceServerMockRecorder) GetUserById(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserById", reflect.TypeOf((*MockUserServiceServer)(nil).GetUserById), arg0, arg1)
+}
+
+// RegisterUser mocks base method.
+func (m *MockUserServiceServer) RegisterUser(arg0 context.Context, arg1 *user.RegisterUserRequest) (*user.RegisterUserResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RegisterUser", arg0, arg1)
+	ret0, _ := ret[0].(*user.RegisterUserResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RegisterUser indicates an expected call of RegisterUser.
+func (mr *MockUserServiceServerMockRecorder) RegisterUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterUser", reflect.TypeOf((*MockUserServiceServer)(nil).RegisterUser), arg0, arg1)
 }
 
 // UpdateUserPassword mocks base method.

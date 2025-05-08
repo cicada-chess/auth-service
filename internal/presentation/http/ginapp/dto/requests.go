@@ -14,7 +14,6 @@ type ForgotPasswordRequest struct {
 }
 
 type ResetPasswordRequest struct {
-	Token       string `json:"token"`
 	NewPassword string `json:"new_password"`
 }
 
@@ -25,4 +24,10 @@ type AccessRequest struct {
 
 type MeRequest struct {
 	Id int `json:"id"`
+}
+
+type RegisterRequest struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }

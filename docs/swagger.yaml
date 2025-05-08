@@ -40,11 +40,18 @@ definitions:
       refresh_token:
         type: string
     type: object
+  docs.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   docs.ResetPasswordRequest:
     properties:
       new_password:
-        type: string
-      token:
         type: string
     type: object
   docs.SuccessResponse:
@@ -148,6 +155,37 @@ paths:
       security:
       - BearerAuth: []
       summary: Проверка токена
+      tags:
+      - Auth
+  /auth/confirm-account:
+    post:
+      description: Активирует аккаунт пользователя по токену
+      parameters:
+      - description: Токен подтверждения
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Аккаунт успешно активирован
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "400":
+          description: Неверный токен
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Подтверждение аккаунта
       tags:
       - Auth
   /auth/forgot-password:
@@ -317,12 +355,56 @@ paths:
       summary: Обновление токена
       tags:
       - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/docs.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно зарегистрирован
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "409":
+          description: Пользователь уже существует
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Регистрация пользователя
+      tags:
+      - Auth
   /auth/reset-password:
     post:
       consumes:
       - application/json
       description: Сбрасывает пароль по ссылке для восстановления
       parameters:
+      - description: Токен для сброса пароля
+        in: query
+        name: token
+        required: true
+        type: string
       - description: Новый пароль
         in: body
         name: request

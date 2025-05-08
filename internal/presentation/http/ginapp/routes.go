@@ -13,7 +13,7 @@ import (
 
 func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Logger) {
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "https://cicada-chess.ru", "https://cikada-inky.vercel.app"}, // Разрешенные источники
+		AllowOrigins:     []string{"http://localhost:3000", "https://cikada-inky.vercel.app", "https://cicada-chess.ru"}, // Разрешенные источники
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
@@ -22,14 +22,16 @@ func InitRoutes(r *gin.Engine, service interfaces.AuthService, logger *logrus.Lo
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := r.Group("/auth")
 	{
+		api.POST("/register", handler.Register)
 		api.POST("/login", handler.Login)
 		api.GET("/logout", handler.Logout)
 		api.POST("/refresh", handler.Refresh)
 		api.GET("/check", handler.Check)
 		api.POST("/forgot-password", handler.ForgotPassword)
 		api.POST("/reset-password", handler.ResetPassword)
+		api.POST("/confirm-account", handler.ConfirmAccount)
+		api.GET("/confirm-account", handler.ConfirmAccount)
 		api.POST("/access", handler.Access)
 		api.GET("/me", handler.Me)
-
 	}
 }

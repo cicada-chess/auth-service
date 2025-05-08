@@ -19,7 +19,7 @@ func TestAuthService_Login_InternalServerError(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
-	svc := auth.NewAuthService(mockUserService, nil, nil)
+	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
 	request := &pb.GetUserByEmailRequest{Email: "repoError@example.com"}
 	mockUserService.EXPECT().GetUserByEmail(ctx, request).Return(nil, status.Error(codes.Internal, "internal server error"))
@@ -33,7 +33,7 @@ func TestAuthService_Login_UserNotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
-	svc := auth.NewAuthService(mockUserService, nil, nil)
+	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
 	request := &pb.GetUserByEmailRequest{Email: "nonexistent@example.com"}
 	mockUserService.EXPECT().GetUserByEmail(ctx, request).Return(nil, status.Error(codes.NotFound, "user not found"))
@@ -46,7 +46,7 @@ func TestAuthService_Login_UserIsBlocked(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
-	svc := auth.NewAuthService(mockUserService, nil, nil)
+	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
 	request := &pb.GetUserByEmailRequest{Email: "blocked@example.com"}
 	response := &pb.GetUserByEmailResponse{Id: "1", Email: "blocked@example.com", Password: "hash_password", IsActive: false}
@@ -61,7 +61,7 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
-	svc := auth.NewAuthService(mockUserService, nil, nil)
+	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
 	request := &pb.GetUserByEmailRequest{Email: "activeUser@example.com"}
 	response := &pb.GetUserByEmailResponse{Id: "1", Email: "activeUser@example.com", Password: "hash_password", IsActive: true}
@@ -76,7 +76,7 @@ func TestAuthService_Login_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
-	svc := auth.NewAuthService(mockUserService, nil, nil)
+	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
 
 	plainPass := "somePass"

@@ -92,6 +92,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/confirm-account": {
+            "post": {
+                "description": "Активирует аккаунт пользователя по токену",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Подтверждение аккаунта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Токен подтверждения",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Аккаунт успешно активирован",
+                        "schema": {
+                            "$ref": "#/definitions/docs.SuccessResponseWithoutData"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный токен",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/forgot-password": {
             "post": {
                 "description": "Отправляет ссылку для восстановления доступа",
@@ -364,6 +411,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/register": {
+            "post": {
+                "description": "Регистрирует нового пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Регистрация пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные для регистрации",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/docs.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Пользователь успешно зарегистрирован",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/docs.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный запрос",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Пользователь уже существует",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/docs.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/reset-password": {
             "post": {
                 "description": "Сбрасывает пароль по ссылке для восстановления",
@@ -378,6 +489,13 @@ const docTemplate = `{
                 ],
                 "summary": "Сброс пароля",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Токен для сброса пароля",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "description": "Новый пароль",
                         "name": "request",
@@ -469,13 +587,24 @@ const docTemplate = `{
                 }
             }
         },
+        "docs.RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "docs.ResetPasswordRequest": {
             "type": "object",
             "properties": {
                 "new_password": {
-                    "type": "string"
-                },
-                "token": {
                     "type": "string"
                 }
             }

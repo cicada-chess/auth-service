@@ -25,6 +25,41 @@ func NewAuthHandler(service interfaces.AuthService, logger *logrus.Logger) *Auth
 	}
 }
 
+// Register godoc
+// @Summary Регистрация пользователя
+// @Description Регистрирует нового пользователя
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body docs.RegisterRequest true "Данные для регистрации"
+// @Success 200 {object} docs.SuccessResponse{data=string} "Пользователь успешно зарегистрирован"
+// @Failure 400 {object} docs.ErrorResponse "Некорректный запрос"
+// @Failure 409 {object} docs.ErrorResponse "Пользователь уже существует"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка сервера"
+// @Router /auth/register [post]
+func (h *AuthHandler) Register(c *gin.Context) {
+	var request dto.RegisterRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		h.logger.Errorf("Error binding request: %v", err)
+		response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := h.service.Register(c.Request.Context(), request.Email, request.Username, request.Password)
+	if err != nil {
+		h.logger.Errorf("Error registering user: %v", err)
+		switch {
+		case errors.Is(err, application.ErrAlreadyExists):
+			response.NewErrorResponse(c, http.StatusConflict, err.Error())
+			return
+		case errors.Is(err, application.ErrInvalidCredentials):
+			response.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		}
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Пользователь успешно зарегистрирован", id)
+}
+
 // Login godoc
 // @Summary Вход пользователя
 // @Description Аутентифицирует пользователя и выдаёт JWT-токены
@@ -202,13 +237,16 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		case errors.Is(err, application.ErrUserNotFound):
 			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь с указанным email не найден")
 			return
+		case errors.Is(err, application.ErrInvalidCredentials):
+			response.NewErrorResponse(c, http.StatusBadRequest, "Неверный формат UUID")
+			return
 		default:
 			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	response.NewSuccessResponse(c, http.StatusOK, "Ссылка для восстановления отправлена", nil)
+	response.NewSuccessResponse(c, http.StatusOK, "Ссылка для восстановления пароля отправлена", nil)
 
 }
 
@@ -218,11 +256,17 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 // @Tags Auth
 // @Accept json
 // @Produce json
+// @Param token query string true "Токен для сброса пароля"
 // @Param request body docs.ResetPasswordRequest true "Новый пароль"
 // @Success 200 {object} docs.SuccessResponseWithoutData "Пароль изменён"
 // @Failure 400 {object} docs.ErrorResponse "Токен недействителен или истек"
 // @Router /auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		response.NewErrorResponse(c, http.StatusBadRequest, "Нет токена")
+		return
+	}
 	var request dto.ResetPasswordRequest
 	if err := c.BindJSON(&request); err != nil {
 		h.logger.Errorf("Error binding request: %v", err)
@@ -230,7 +274,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 		return
 	}
 
-	err := h.service.ResetPassword(c.Request.Context(), request.Token, request.NewPassword)
+	err := h.service.ResetPassword(c.Request.Context(), token, request.NewPassword)
 
 	if err != nil {
 		h.logger.Errorf("Error resetting password: %v", err)
@@ -336,6 +380,8 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		case errors.Is(err, application.ErrInvalidCredentials):
 			response.NewErrorResponse(c, http.StatusBadRequest, "Неверный UUID пользователя")
 			return
+		case errors.Is(err, application.ErrTokenInvalidOrExpired):
+			response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
 		default:
 			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
@@ -354,4 +400,42 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	}
 
 	response.NewSuccessResponse(c, http.StatusOK, "Информация о пользователе", dtoUser)
+}
+
+// ConfirmAccount godoc
+// @Summary Подтверждение аккаунта
+// @Description Активирует аккаунт пользователя по токену
+// @Tags Auth
+// @Produce json
+// @Param token query string true "Токен подтверждения"
+// @Success 200 {object} docs.SuccessResponseWithoutData "Аккаунт успешно активирован"
+// @Failure 400 {object} docs.ErrorResponse "Неверный токен"
+// @Failure 404 {object} docs.ErrorResponse "Пользователь не найден"
+// @Failure 500 {object} docs.ErrorResponse "Внутренняя ошибка"
+// @Router /auth/confirm-account [post]
+func (h *AuthHandler) ConfirmAccount(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		response.NewErrorResponse(c, http.StatusBadRequest, "Нет токена")
+		return
+	}
+	err := h.service.ConfirmAccount(c.Request.Context(), token)
+	if err != nil {
+		h.logger.Errorf("Error confirming account: %v", err)
+		switch {
+		case errors.Is(err, application.ErrUserNotFound):
+			response.NewErrorResponse(c, http.StatusNotFound, "Пользователь не найден")
+			return
+		case errors.Is(err, application.ErrTokenInvalidOrExpired):
+			response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
+			return
+		case errors.Is(err, application.ErrInvalidCredentials):
+			response.NewErrorResponse(c, http.StatusBadRequest, "Токен недействителен или истёк")
+		default:
+			response.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	response.NewSuccessResponse(c, http.StatusOK, "Аккаунт успешно активирован", nil)
 }
