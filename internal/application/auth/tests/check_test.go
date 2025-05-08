@@ -11,26 +11,26 @@ import (
 )
 
 func TestAuthService_Check_NoBearerPrefix(t *testing.T) {
-	svc := auth.NewAuthService(nil, nil, nil)
+	svc := auth.NewAuthService(nil, nil)
 	err := svc.Check(context.Background(), "InvalidTokenHeader")
 	assert.Equal(t, auth.ErrTokenInvalidOrExpired, err)
 }
 
 func TestAuthService_Check_EmptyBearerToken(t *testing.T) {
-	svc := auth.NewAuthService(nil, nil, nil)
+	svc := auth.NewAuthService(nil, nil)
 	err := svc.Check(context.Background(), "Bearer ")
 	assert.Equal(t, auth.ErrTokenInvalidOrExpired, err)
 }
 
 func TestAuthService_Check_InvalidToken(t *testing.T) {
-	svc := auth.NewAuthService(nil, nil, nil)
+	svc := auth.NewAuthService(nil, nil)
 	_ = os.Setenv("SECRET_KEY", "test_secret")
 	err := svc.Check(context.Background(), "Bearer invalid_token_string")
 	assert.Equal(t, auth.ErrTokenInvalidOrExpired, err)
 }
 
 func TestAuthService_Check_ValidToken(t *testing.T) {
-	svc := auth.NewAuthService(nil, nil, nil)
+	svc := auth.NewAuthService(nil, nil)
 	_ = os.Setenv("SECRET_KEY", "test_secret")
 
 	validToken, errGen := authEntity.GenerateAccessToken("12", 1)

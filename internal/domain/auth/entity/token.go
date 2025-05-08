@@ -24,7 +24,7 @@ const (
 	RefreshToken        TokenType = "refresh"
 )
 
-var ErrTokenInvalidOrExpired = errors.New("token invalid or expired")
+var ErrTokenInvalidOrExpired = errors.New("token is invalid or expired")
 
 type Token struct {
 	AccessToken      string

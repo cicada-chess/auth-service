@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	senderInterface "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/sender"
 	accessEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/entity"
 	accessInterfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/interfaces"
 	auth "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
@@ -30,16 +29,14 @@ var (
 )
 
 type authService struct {
-	client      pb.UserServiceClient
-	accessRepo  accessInterfaces.AccessRepository
-	emailSender senderInterface.EmailSender // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
+	client     pb.UserServiceClient
+	accessRepo accessInterfaces.AccessRepository
 }
 
-func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.AccessRepository, emailSender senderInterface.EmailSender) authInterfaces.AuthService {
+func NewAuthService(client pb.UserServiceClient, accessRepo accessInterfaces.AccessRepository) authInterfaces.AuthService {
 	return &authService{
-		client:      client,
-		accessRepo:  accessRepo,
-		emailSender: emailSender, // TODO: УДАЛИТЬ КОГДА ПОДКЛЮЧИМ GRPC
+		client:     client,
+		accessRepo: accessRepo,
 	}
 }
 

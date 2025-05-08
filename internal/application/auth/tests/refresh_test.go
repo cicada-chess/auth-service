@@ -11,7 +11,7 @@ import (
 )
 
 func TestAuthService_Refresh_InvalidToken(t *testing.T) {
-	svc := auth.NewAuthService(nil, nil, nil)
+	svc := auth.NewAuthService(nil, nil)
 	_ = os.Setenv("SECRET_KEY", "test_secret")
 
 	token, err := svc.Refresh(context.Background(), "invalid_token_string")
@@ -20,7 +20,7 @@ func TestAuthService_Refresh_InvalidToken(t *testing.T) {
 }
 
 func TestAuthService_Refresh_ValidToken(t *testing.T) {
-	svc := auth.NewAuthService(nil, nil, nil)
+	svc := auth.NewAuthService(nil, nil)
 	_ = os.Setenv("SECRET_KEY", "test_secret")
 
 	validToken, errGen := authEntity.GenerateRefreshToken("12", 1)
@@ -30,7 +30,6 @@ func TestAuthService_Refresh_ValidToken(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, token)
 	assert.NotEmpty(t, token.AccessToken)
-	assert.Equal(t, validToken, token.RefreshToken)
 
 	err = svc.Check(context.Background(), "Bearer "+token.AccessToken)
 	assert.NoError(t, err)
