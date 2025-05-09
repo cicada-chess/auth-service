@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	service "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
+	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/config"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/db/postgres"
 	infrastructure "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/infrastructure/repository/postgres/access"
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/presentation/grpc/handlers"
@@ -46,8 +47,9 @@ func main() {
 
 	client := pb.NewUserServiceClient(conn)
 
-	cfgToDB := postgres.GetDBConfig()
-	dbConn, err := postgres.NewPostgresDB(cfgToDB)
+	config := config.ReadConfig()
+
+	dbConn, err := postgres.NewPostgresDB(config.DB)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

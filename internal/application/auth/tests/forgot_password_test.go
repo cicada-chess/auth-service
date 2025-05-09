@@ -20,11 +20,10 @@ func TestAuthService_ForgotPassword_UserNotFound(t *testing.T) {
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
 	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
-	request := &pb.GetUserByEmailRequest{Email: ""}
-	mockUserService.EXPECT().GetUserByEmail(ctx, request).Return(nil, status.Error(codes.NotFound, "user not found"))
-	err := svc.ForgotPassword(ctx, "")
+	request := &pb.ForgotPasswordRequest{Email: "@example.com"}
+	mockUserService.EXPECT().ForgotPassword(ctx, request).Return(nil, status.Error(codes.NotFound, "user not found"))
+	err := svc.ForgotPassword(ctx, "@example.com")
 	assert.Equal(t, auth.ErrUserNotFound, err)
-
 }
 
 func TestAuthService_ForgotPassword_Success(t *testing.T) {
@@ -34,9 +33,8 @@ func TestAuthService_ForgotPassword_Success(t *testing.T) {
 	mockUserService := mock_user_service.NewMockUserServiceClient(ctrl)
 	svc := auth.NewAuthService(mockUserService, nil)
 	ctx := context.Background()
-	request := &pb.GetUserByEmailRequest{Email: "@example.com"}
-	response := &pb.GetUserByEmailResponse{Id: "1", Email: "@example.com", Password: "hash", IsActive: true}
-	mockUserService.EXPECT().GetUserByEmail(ctx, request).Return(response, nil)
+	request := &pb.ForgotPasswordRequest{Email: "@example.com"}
+	mockUserService.EXPECT().ForgotPassword(ctx, request).Return(&pb.ForgotPasswordResponse{}, nil)
 	err := svc.ForgotPassword(ctx, "@example.com")
 	assert.NoError(t, err)
 }
