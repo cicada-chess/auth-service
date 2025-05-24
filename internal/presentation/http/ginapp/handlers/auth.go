@@ -315,12 +315,6 @@ func (h *AuthHandler) Access(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Check(c.Request.Context(), tokenHeader); err != nil {
-		h.logger.Errorf("Error token check: %v", err)
-		response.NewErrorResponse(c, http.StatusUnauthorized, "Токен недействителен или истёк")
-		return
-	}
-
 	var request dto.AccessRequest
 	if err := c.BindJSON(&request); err != nil {
 		h.logger.Errorf("Error binding request: %v", err)
@@ -328,7 +322,7 @@ func (h *AuthHandler) Access(c *gin.Context) {
 		return
 	}
 
-	err := h.service.Access(c.Request.Context(), request.Role, request.Url)
+	err := h.service.Access(c.Request.Context(), tokenHeader, request.Url)
 
 	if err != nil {
 		h.logger.Errorf("Error checking access: %v", err)

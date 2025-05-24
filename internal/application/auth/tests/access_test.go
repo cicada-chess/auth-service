@@ -9,6 +9,7 @@ import (
 	"gitlab.mai.ru/cicada-chess/backend/auth-service/internal/application/auth"
 	accessEntity "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/entity"
 	mock_interfaces "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/access/mocks"
+	domainAuth "gitlab.mai.ru/cicada-chess/backend/auth-service/internal/domain/auth/entity"
 )
 
 func TestAuthService_Access_PermissionGranted(t *testing.T) {
@@ -25,8 +26,10 @@ func TestAuthService_Access_PermissionGranted(t *testing.T) {
 		Roles: []int{1, 2},
 	}
 
+	token, _ := domainAuth.GenerateAccessToken("user_id", 1)
+
 	mockAccessRepo.EXPECT().GetProtectedUrl(ctx, "/protected").Return(protectedUrl, nil)
-	err := svc.Access(ctx, 1, "/protected")
+	err := svc.Access(ctx, token, "/protected")
 	assert.NoError(t, err)
 }
 
@@ -43,9 +46,10 @@ func TestAuthService_Access_PermissionDenied(t *testing.T) {
 		Url:   "/protected",
 		Roles: []int{1, 2},
 	}
+	token, _ := domainAuth.GenerateAccessToken("user_id", 3)
 
 	mockAccessRepo.EXPECT().GetProtectedUrl(ctx, "/protected").Return(protectedUrl, nil)
-	err := svc.Access(ctx, 3, "/protected")
+	err := svc.Access(ctx, token, "/protected")
 	assert.Equal(t, auth.ErrPermissionDenied, err)
 }
 
@@ -57,7 +61,9 @@ func TestAuthService_Access_UrlNotFound(t *testing.T) {
 	svc := auth.NewAuthService(nil, mockAccessRepo)
 	ctx := context.Background()
 
-	mockAccessRepo.EXPECT().GetProtectedUrl(ctx, "/nonexistent").Return(nil, auth.ErrUrlNotFound)
-	err := svc.Access(ctx, 1, "/nonexistent")
+	token, _ := domainAuth.GenerateAccessToken("user_id", 1)
+
+	mockAccessRepo.EXPECT().GetProtectedUrl(ctx, "/nonexistent").Return(nil, nil)
+	err := svc.Access(ctx, token, "/nonexistent")
 	assert.Equal(t, auth.ErrUrlNotFound, err)
 }

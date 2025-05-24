@@ -96,7 +96,7 @@ func GenerateToken(userId string, Role int) (*Token, error) {
 	return token, nil
 }
 
-func ValidateToken(tokenString string, tokenType TokenType) (*string, error) {
+func ValidateToken(tokenString string, tokenType TokenType) (*jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrTokenInvalidOrExpired
@@ -123,9 +123,31 @@ func ValidateToken(tokenString string, tokenType TokenType) (*string, error) {
 		return nil, ErrTokenInvalidOrExpired
 	}
 
-	userId, ok := claims["user_id"].(string)
+	return &claims, err
+}
+
+func GetUserIdFromToken(tokenString string, tokenType TokenType) (*string, error) {
+	claims, err := ValidateToken(tokenString, tokenType)
+	if err != nil {
+		return nil, err
+	}
+
+	userId, ok := (*claims)["user_id"].(string)
 	if !ok {
 		return nil, ErrTokenInvalidOrExpired
 	}
 	return &userId, nil
+}
+
+func GetRoleFromToken(tokenString string, tokenType TokenType) (int, error) {
+	claims, err := ValidateToken(tokenString, tokenType)
+	if err != nil {
+		return 0, err
+	}
+
+	role, ok := (*claims)["role"].(float64)
+	if !ok {
+		return 0, ErrTokenInvalidOrExpired
+	}
+	return int(role), nil
 }

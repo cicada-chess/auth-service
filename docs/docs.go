@@ -527,9 +527,6 @@ const docTemplate = `{
         "docs.AccessRequest": {
             "type": "object",
             "properties": {
-                "role": {
-                    "type": "integer"
-                },
                 "url": {
                     "type": "string"
                 }

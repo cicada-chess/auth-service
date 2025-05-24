@@ -2,8 +2,6 @@ basePath: /
 definitions:
   docs.AccessRequest:
     properties:
-      role:
-        type: integer
       url:
         type: string
     type: object

@@ -92,7 +92,7 @@ func (s *authService) Login(ctx context.Context, email string, password string) 
 
 	token, err := auth.GenerateToken(user.Id, int(user.Role))
 	if err != nil {
-		return nil, err
+		return nil, ErrInternalServer
 	}
 
 	return token, nil
@@ -111,7 +111,7 @@ func (s *authService) Check(ctx context.Context, tokenHeader string) error {
 
 	_, err := auth.ValidateToken(accessToken, auth.AccessToken)
 	if err != nil {
-		return err
+		return ErrInternalServer
 	}
 	return nil
 }
@@ -119,7 +119,7 @@ func (s *authService) Check(ctx context.Context, tokenHeader string) error {
 func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.Token, error) {
 	_, err := auth.ValidateToken(refreshToken, auth.RefreshToken)
 	if err != nil {
-		return nil, err
+		return nil, ErrInternalServer
 	}
 	token, _ := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("SECRET_KEY")), nil
@@ -129,7 +129,7 @@ func (s *authService) Refresh(ctx context.Context, refreshToken string) (*auth.T
 	accessToken, err := auth.GenerateAccessToken(claims["user_id"].(string), int(claims["role"].(float64)))
 
 	if err != nil {
-		return nil, err
+		return nil, ErrInternalServer
 	}
 
 	return &auth.Token{
@@ -160,9 +160,9 @@ func (s *authService) ForgotPassword(ctx context.Context, email string) error {
 }
 
 func (s *authService) ResetPassword(ctx context.Context, token, newPassword string) error {
-	userId, err := auth.ValidateToken(token, auth.PasswordReset)
+	userId, err := auth.GetUserIdFromToken(token, auth.PasswordReset)
 	if err != nil {
-		return err
+		return ErrInternalServer
 	}
 
 	req := &pb.UpdateUserPasswordRequest{Id: *userId, Password: newPassword}
@@ -184,10 +184,18 @@ func (s *authService) ResetPassword(ctx context.Context, token, newPassword stri
 	return nil
 }
 
-func (s *authService) Access(ctx context.Context, role int, url string) error {
+func (s *authService) Access(ctx context.Context, accessToken, url string) error {
+	role, err := auth.GetRoleFromToken(accessToken, auth.AccessToken)
+	if err != nil {
+		return ErrInternalServer
+	}
+
 	protectedUrl, err := s.accessRepo.GetProtectedUrl(ctx, url)
 	if err != nil {
-		return err
+		return ErrInternalServer
+	}
+	if protectedUrl == nil {
+		return ErrUrlNotFound
 	}
 	if !accessEntity.CheckPermission(protectedUrl.Roles, role) {
 		return ErrPermissionDenied
@@ -238,9 +246,9 @@ func (s *authService) Me(ctx context.Context, tokenHeader string) (*userEntity.U
 }
 
 func (s *authService) ConfirmAccount(ctx context.Context, token string) error {
-	id, err := auth.ValidateToken(token, auth.AccountConfirmation)
+	id, err := auth.GetUserIdFromToken(token, auth.AccountConfirmation)
 	if err != nil {
-		return err
+		return ErrInternalServer
 	}
 
 	req := &pb.ConfirmAccountRequest{Id: *id}

@@ -18,8 +18,7 @@ type ResetPasswordRequest struct {
 }
 
 type AccessRequest struct {
-	Role int    `json:"role"`
-	Url  string `json:"url"`
+	Url string `json:"url"`
 }
 
 type MeRequest struct {
