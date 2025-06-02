@@ -1,0 +1,433 @@
+basePath: /
+definitions:
+  docs.AccessRequest:
+    properties:
+      role:
+        type: integer
+      url:
+        type: string
+    type: object
+  docs.AccessToken:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      token_type:
+        type: string
+    type: object
+  docs.ErrorResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  docs.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    type: object
+  docs.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  docs.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  docs.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  docs.ResetPasswordRequest:
+    properties:
+      new_password:
+        type: string
+    type: object
+  docs.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  docs.SuccessResponseWithoutData:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  docs.Token:
+    properties:
+      access_expires_in:
+        type: integer
+      access_token:
+        type: string
+      refresh_expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  docs.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      rating:
+        type: integer
+      role:
+        type: integer
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+host: cicada-chess.ru:8081
+info:
+  contact: {}
+  description: API для аутентификации пользователей
+  title: Auth API
+  version: "1.0"
+paths:
+  /auth/access:
+    post:
+      consumes:
+      - application/json
+      description: Проверяет доступ к заданному маршруту на основе роли
+      parameters:
+      - description: Роль и маршрут
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/docs.AccessRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Доступ разрешён
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "400":
+          description: Недействительные данные
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Недействительный или отсутствующий токен
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Проверка прав доступа
+      tags:
+      - Auth
+  /auth/check:
+    get:
+      description: Проверяет валидность переданного access-токена
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Токен действителен
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "401":
+          description: Токен недействителен или отсутствует
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Проверка токена
+      tags:
+      - Auth
+  /auth/confirm-account:
+    post:
+      description: Активирует аккаунт пользователя по токену
+      parameters:
+      - description: Токен подтверждения
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Аккаунт успешно активирован
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "400":
+          description: Неверный токен
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Подтверждение аккаунта
+      tags:
+      - Auth
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Отправляет ссылку для восстановления доступа
+      parameters:
+      - description: Email для восстановления
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/docs.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ссылка для восстановления отправлена
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Восстановление пароля
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентифицирует пользователя и выдаёт JWT-токены
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/docs.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная авторизация
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/docs.Token'
+              type: object
+        "400":
+          description: Неверные учётные данные
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "403":
+          description: Пользователь заблокирован
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Вход пользователя
+      tags:
+      - Auth
+  /auth/logout:
+    get:
+      description: Завершает сессию пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Сессия завершена
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "401":
+          description: Неавторизованный доступ
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Выход пользователя
+      tags:
+      - Auth
+  /auth/me:
+    get:
+      description: Возвращает информацию о пользователе, если токен действителен
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о пользователе
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/docs.User'
+              type: object
+        "400":
+          description: Неверный UUID пользователя
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Недействительный или отсутствующий токен
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение информации о пользователе по access-токену
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Обновляет access-токен с помощью refresh-токена
+      parameters:
+      - description: Refresh-токен
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/docs.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Новый токен получен
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/docs.AccessToken'
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "401":
+          description: Недействительный или истекший refresh-токен
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Обновление токена
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/docs.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно зарегистрирован
+          schema:
+            allOf:
+            - $ref: '#/definitions/docs.SuccessResponse'
+            - properties:
+                data:
+                  type: string
+              type: object
+        "400":
+          description: Некорректный запрос
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "409":
+          description: Пользователь уже существует
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Регистрация пользователя
+      tags:
+      - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Сбрасывает пароль по ссылке для восстановления
+      parameters:
+      - description: Токен для сброса пароля
+        in: query
+        name: token
+        required: true
+        type: string
+      - description: Новый пароль
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/docs.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пароль изменён
+          schema:
+            $ref: '#/definitions/docs.SuccessResponseWithoutData'
+        "400":
+          description: Токен недействителен или истек
+          schema:
+            $ref: '#/definitions/docs.ErrorResponse'
+      summary: Сброс пароля
+      tags:
+      - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

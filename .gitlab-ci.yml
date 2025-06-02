@@ -1,0 +1,23 @@
+stages:
+  - deploy
+
+variables:
+  PROJECT_DIR: "/home/gitlab-runner/backend"
+  SERVICE_NAME: "auth-service"
+  BRANCH_NAME: "develop"
+
+deploy_auth_service:
+  stage: deploy
+  tags:
+    - auth-runner
+  script:
+    - cd ${PROJECT_DIR}/${SERVICE_NAME}
+    - git fetch origin ${BRANCH_NAME}
+    - git reset --hard origin/${BRANCH_NAME}
+
+    - cd ${PROJECT_DIR}
+    - docker-compose build ${SERVICE_NAME}
+    - docker-compose up -d ${SERVICE_NAME}
+
+  only:
+    - develop
